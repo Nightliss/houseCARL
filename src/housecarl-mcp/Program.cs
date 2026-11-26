@@ -16,7 +16,11 @@ catch (ArgumentException bad)
     return 1;
 }
 
-var builder = Host.CreateApplicationBuilder(args);
+var builder = Host.CreateApplicationBuilder(new HostApplicationBuilderSettings
+{
+    Args = args,
+    ContentRootPath = AppContext.BaseDirectory,
+});
 // STDIO GOTCHA: stdout IS the JSON-RPC channel — route ALL logs to stderr or they corrupt the protocol stream.
 builder.Logging.AddConsole(o => o.LogToStandardErrorThreshold = LogLevel.Trace);
 
