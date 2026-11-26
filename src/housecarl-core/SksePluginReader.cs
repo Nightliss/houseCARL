@@ -219,7 +219,7 @@ public static class SksePluginReader
     {
         try
         {
-            string sys = Environment.GetFolderPath(Environment.SpecialFolder.System);
+            string sys = GamePrefix.System32() ?? "";
             if (sys.Length > 0 && File.Exists(LooseListings.OnDisk(sys, d))) return true;
             foreach (var dir in (Environment.GetEnvironmentVariable("PATH") ?? "").Split(Path.PathSeparator))
             {

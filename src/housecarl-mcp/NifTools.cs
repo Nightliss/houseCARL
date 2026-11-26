@@ -166,7 +166,7 @@ public static class NifTools
         foreach (var raw in pathsIn.Tokens ?? Array.Empty<string>())
         {
             var p = (raw ?? "").Trim().Trim('"');
-            entries.Add((p, p.Length > 0 && Path.IsPathFullyQualified(p)));
+            entries.Add((p, p.Length > 0 && HousecarlCore.DiskPath.NamesDiskPath(p)));
         }
         var ids = (idsIn.Tokens ?? Array.Empty<string>()).Where(t => !string.IsNullOrWhiteSpace(t)).Select(t => t.Trim()).ToList();
         var underTokens = underIn.Tokens ?? Array.Empty<string>();

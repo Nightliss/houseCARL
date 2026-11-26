@@ -76,7 +76,7 @@ public sealed class NpcFace(Func<FormKey, IMajorRecordGetter?> fetch, string uns
         try
         {
             files = root.EnumerateAssetLinks(AssetLinkQuery.Resolved, race.Cache)
-                        .Select(l => l.DataRelativePath.Path)
+                        .Select(l => DiskPath.Logical(l.DataRelativePath.Path))
                         .Where(p => p.Contains(@"\facegendata\", StringComparison.OrdinalIgnoreCase))
                         .Distinct(StringComparer.OrdinalIgnoreCase).ToList();
         }

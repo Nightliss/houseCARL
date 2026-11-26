@@ -10,7 +10,7 @@ namespace HousecarlMcpTests;
 public sealed class SkseConfigFileSectionTests
 {
     static SkseConfigFileAudit File(string rel, string? readError = null, bool archiveOnly = false)
-        => new(rel, Path.GetFileName(rel), "Foo", archiveOnly ? "Arch.bsa" : "ModA", 1, Array.Empty<SkseProvider>(),
+        => new(rel, DiskPath.FileName(rel), "Foo", archiveOnly ? "Arch.bsa" : "ModA", 1, Array.Empty<SkseProvider>(),
             readError is null
                 ? new[] { new SkseAuditedRef(new SkseConfigRef("0x1|Skyrim.esm", SkseRefShape.FormToken, "Skyrim.esm", 0x1, "0x1", 1, null), SkseRefVerdict.Ok, null) }
                 : Array.Empty<SkseAuditedRef>(),

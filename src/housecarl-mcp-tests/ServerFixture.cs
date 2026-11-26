@@ -52,25 +52,15 @@ public sealed class ServerFixture : IDisposable
     /// touching the shared one, which every other stdio test reads.</summary>
     internal ServerFixture(IReadOnlyDictionary<string, string>? environment)
     {
-        var exe = Path.Combine(HarnessPaths.RepoRoot, "src", "housecarl-mcp", "bin",
-                               HarnessPaths.Configuration, HarnessPaths.TargetFramework, "housecarl-mcp.exe");
-        if (!File.Exists(exe))
-            throw new InvalidOperationException(
-                $"housecarl-mcp.exe is not built at '{exe}'. Build the solution in " +
-                $"{HarnessPaths.Configuration} first — these tests drive the real server and cannot " +
-                "substitute anything else for it.");
-
         _dataDir = Path.Combine(Path.GetTempPath(), "housecarl-mcp-tests-" + Guid.NewGuid().ToString("N"));
         Directory.CreateDirectory(_dataDir);
 
-        var psi = new ProcessStartInfo(exe)
-        {
-            RedirectStandardInput = true,
-            RedirectStandardOutput = true,
-            RedirectStandardError = true,
-            UseShellExecute = false,
-            StandardOutputEncoding = Encoding.UTF8,
-        };
+        var psi = HarnessPaths.ServerStart();
+        psi.RedirectStandardInput = true;
+        psi.RedirectStandardOutput = true;
+        psi.RedirectStandardError = true;
+        psi.UseShellExecute = false;
+        psi.StandardOutputEncoding = Encoding.UTF8;
         psi.Environment["HOUSECARL_DATA_DIR"] = _dataDir;
         if (environment is not null)
             foreach (var (name, value) in environment) psi.Environment[name] = value;

@@ -173,7 +173,7 @@ public static class GameLanguage
             if (!Directory.Exists(dir)) continue;
             try
             {
-                foreach (var f in Directory.EnumerateFiles(dir, $"*_{language}.*strings"))
+                foreach (var f in Directory.EnumerateFiles(dir, $"*_{language}.*strings", DiskPath.IgnoreCase))
                     loose.TryAdd(Path.GetFileName(f), (dir, layer));
             }
             catch (IOException) { }                     // a Strings folder that will not list adds nothing, as the game sees none

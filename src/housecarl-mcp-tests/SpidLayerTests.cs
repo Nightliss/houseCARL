@@ -59,7 +59,7 @@ sealed class SpidWorld : IDisposable
 
         foreach (var (name, text) in files)
         {
-            var path = Path.Combine(IniMod, name);
+            var path = DiskPath.Join(IniMod, name);
             Directory.CreateDirectory(Path.GetDirectoryName(path)!);
             File.WriteAllText(path, text);
         }

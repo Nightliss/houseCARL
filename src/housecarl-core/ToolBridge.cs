@@ -134,6 +134,5 @@ public static class ToolBridge
         return found is not null ? (found, ToolPathSource.AutoDetected) : (null, ToolPathSource.Unset);
     }
 
-    static string MyGames => Path.Combine(
-        Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), "My Games", "Skyrim Special Edition");
+    static string MyGames => GamePrefix.MyGames();
 }

@@ -18,7 +18,7 @@ public sealed class AssetProviderSelectTests : IClassFixture<AssetSelectWorld>
         => _w.Svc.AssetStatus(paths ?? Array.Empty<string>(), under, provider: name);
 
     static AssetPathResult Row(AssetStatusData d, string leaf)
-        => d.Results.Single(r => Path.GetFileName(r.RelPath).Equals(leaf, StringComparison.OrdinalIgnoreCase));
+        => d.Results.Single(r => DiskPath.FileName(r.RelPath).Equals(leaf, StringComparison.OrdinalIgnoreCase));
 
     /// <summary>A mod's own loose files, every one of them and nothing another mod ships: FaceBase holds eight, one of
     /// which FaceHigher wins over.</summary>
@@ -32,7 +32,7 @@ public sealed class AssetProviderSelectTests : IClassFixture<AssetSelectWorld>
         Assert.Equal("FaceHigher", Row(d, "0002.nif").Hit!.Winner!.Source);
         Assert.Equal(7, d.Results.Count(r => r.Standing == ProviderStanding.Wins));
         // Only FaceBase's own files: FaceHigher's 0004 is not in its view.
-        Assert.DoesNotContain(d.Results, r => Path.GetFileName(r.RelPath) == "0004.nif");
+        Assert.DoesNotContain(d.Results, r => DiskPath.FileName(r.RelPath) == "0004.nif");
     }
 
     /// <summary>The text row says the standing in one line, naming the winning copy the way the providers line does.</summary>
@@ -55,7 +55,7 @@ public sealed class AssetProviderSelectTests : IClassFixture<AssetSelectWorld>
         Assert.Equal(3, d.Selected);
         Assert.All(d.Results, r => Assert.Contains(r.Hit!.Providers, p => p.Source == "HcArch.bsa"));
         Assert.Equal(ProviderStanding.Wins, Row(d, "0005.nif").Standing);
-        var split = Row(d, Path.GetFileName(AssetSelectWorld.Face(AssetSelectWorld.SplitFormId, FaceGenSlot.Mesh)));
+        var split = Row(d, DiskPath.FileName(AssetSelectWorld.Face(AssetSelectWorld.SplitFormId, FaceGenSlot.Mesh)));
         Assert.Equal(ProviderStanding.Shadowed, split.Standing);
         Assert.Equal("FaceHigher", split.Hit!.Winner!.Source);
     }
@@ -89,7 +89,7 @@ public sealed class AssetProviderSelectTests : IClassFixture<AssetSelectWorld>
     {
         var d = Provider("FaceBase", under: new[] { AssetSelectWorld.FaceGeomDir });
 
-        Assert.Equal(new[] { "0001.nif", "0002.nif", "0003.nif" }, d.Results.Select(r => Path.GetFileName(r.RelPath)));
+        Assert.Equal(new[] { "0001.nif", "0002.nif", "0003.nif" }, d.Results.Select(r => DiskPath.FileName(r.RelPath)));
 
         var none = Provider("FaceBase", under: new[] { @"meshes\hcnothing" });
         Assert.Contains("matched no file in provider 'FaceBase'", Assert.Single(none.SelectorNotes!));
@@ -101,7 +101,7 @@ public sealed class AssetProviderSelectTests : IClassFixture<AssetSelectWorld>
     {
         var d = Provider("FaceHigher", under: new[] { "**/*000?.nif" });
 
-        Assert.Equal(new[] { "0002.nif", "0004.nif" }, d.Results.Select(r => Path.GetFileName(r.RelPath)));
+        Assert.Equal(new[] { "0002.nif", "0004.nif" }, d.Results.Select(r => DiskPath.FileName(r.RelPath)));
         Assert.All(d.Results, r => Assert.Equal(ProviderStanding.Wins, r.Standing));
     }
 

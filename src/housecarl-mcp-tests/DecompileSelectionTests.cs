@@ -443,7 +443,7 @@ public sealed class DecompileSelectionTests : IDisposable
     {
         // A .psc held open in the mods tree thins the hierarchy, so the note says what it is: a Data path alone reads
         // its parents off the load order and no .pex beside a file on disk.
-        var held = Path.Combine(_p.Mod("Fix"), @"Source\Scripts\HcDsHeld.psc");
+        var held = DiskPath.Join(_p.Mod("Fix"), @"Source\Scripts\HcDsHeld.psc");
         PlaceInstance.Loose(_p.Mod("Fix"), @"Source\Scripts\HcDsHeld.psc",
             System.Text.Encoding.ASCII.GetBytes("ScriptName HcDsHeld extends Quest\n"));
         _p.TouchModlist();

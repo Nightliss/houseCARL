@@ -137,7 +137,7 @@ public sealed class ArchiveReadOnceTests : IDisposable
         // Each placed file holds its own entry's bytes.
         string[] from = [MeshA, MeshB, MeshA, MeshB];
         for (int i = 0; i < from.Length; i++)
-            Assert.Equal(BsaBuilder.Bytes(from[i], 32), File.ReadAllBytes(Path.Combine(outcome.ModFolder!, outcome.Results[i].AssetPath)));
+            Assert.Equal(BsaBuilder.Bytes(from[i], 32), File.ReadAllBytes(DiskPath.Join(outcome.ModFolder!, outcome.Results[i].AssetPath)));
     }
 
     /// <summary>A packed mesh `nif_set` edits is read through the call's view: one table.</summary>

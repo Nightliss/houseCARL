@@ -64,7 +64,7 @@ public sealed class SetupRunTextTests
         => part.Split(Environment.NewLine).Select(l => l.Trim())
             .Single(l => l.StartsWith(path + " ", StringComparison.Ordinal))[path.Length..].Trim();
 
-    [Fact]
+    [WindowsFact]
     public void AFirstInstallSaysRegisteredAndNamesTheCopy()
     {
         using var box = Box();
@@ -81,7 +81,7 @@ public sealed class SetupRunTextTests
         Assert.DoesNotContain("your settings", ran.Out);
     }
 
-    [Fact]
+    [WindowsFact]
     public void KeptClaudeSettingsAreNamedWithoutTheirValues()
     {
         using var box = Box();
@@ -100,7 +100,7 @@ public sealed class SetupRunTextTests
         Assert.DoesNotContain("600000", ran.Out);
     }
 
-    [Fact]
+    [WindowsFact]
     public void SetupsOwnClaudeKeysAreNotNamedAsTheUsers()
     {
         using var box = Box();
@@ -109,7 +109,7 @@ public sealed class SetupRunTextTests
         Assert.DoesNotContain("your settings", Setup(box, "--claude").Out);
     }
 
-    [Fact]
+    [WindowsFact]
     public void KeptCodexSettingsAreNamedWithoutTheirValues()
     {
         using var box = Box();
@@ -125,7 +125,7 @@ public sealed class SetupRunTextTests
         Assert.DoesNotContain("600", ran.Out.Replace(box.Root, ""));
     }
 
-    [Theory]
+    [WindowsTheory]
     [InlineData("x = [\n[mcp_servers.housecarl]\ncommand = '" + OldExe + "'\ncert = '''\nc2VjcmV0dG9rZW4=\n'''\n")]
     [InlineData("x = 1]\n[mcp_servers.housecarl]\ncommand = '" + OldExe + "'\ncert = '''\nc2VjcmV0dG9rZW4=\n'''\n")]
     [InlineData("x = '''\n[mcp_servers.housecarl]\ncommand = '" + OldExe + "'\ncert = '''\nc2VjcmV0dG9rZW4=\n'''\n")]
@@ -144,7 +144,7 @@ public sealed class SetupRunTextTests
     }
 
     // Pins unchanged behaviour: no name is printed, but that houseCARL is off still is.
-    [Fact]
+    [WindowsFact]
     public void AConfigLeftOpenStillSaysHouseCarlIsOff()
     {
         using var box = Box();
@@ -153,7 +153,7 @@ public sealed class SetupRunTextTests
         Assert.Contains("still turned off in Codex", Setup(box, "--codex").Summary);
     }
 
-    [Theory]
+    [WindowsTheory]
     [InlineData("enabled = false # for now\n", true)]
     [InlineData("enabled = true\n", false)]
     [InlineData("\n[mcp_servers.housecarl.tools]\nenabled = false\n", false)]
@@ -167,7 +167,7 @@ public sealed class SetupRunTextTests
         Assert.Equal(off, Setup(box, "--codex").Summary.Contains("still turned off in Codex"));
     }
 
-    [Fact]
+    [WindowsFact]
     public void AReRunThatChangesNothingSaysAlreadyRegistered()
     {
         using var box = Box();
@@ -186,7 +186,7 @@ public sealed class SetupRunTextTests
         Assert.Contains("kept your settings on it: enabled, tool_timeout_sec, env", ran.Summary);
     }
 
-    [Fact]
+    [WindowsFact]
     public void ThePlanOfARunThatChangesNothingNamesTheSettingsAndThatHouseCarlIsOff()
     {
         using var box = Box();
@@ -198,7 +198,7 @@ public sealed class SetupRunTextTests
         Assert.Contains("still turned off in Codex", ran.Plan);
     }
 
-    [Fact]
+    [WindowsFact]
     public void ThePlanNamesTheCopyOfAReplacedEntry()
     {
         using var box = Box();
@@ -207,7 +207,7 @@ public sealed class SetupRunTextTests
         Assert.Contains("config.toml.houseCARL.bak", Setup(box, "--codex").Plan);
     }
 
-    [Fact]
+    [WindowsFact]
     public void AReRunThatChangesNothingDoesNotSayItWritesOrRegisters()
     {
         using var box = Box();
@@ -220,7 +220,7 @@ public sealed class SetupRunTextTests
         Assert.DoesNotContain("registering", ran.Plan);
     }
 
-    [Fact]
+    [WindowsFact]
     public void AFirstInstallOverAnEntryThatIsThereDoesNotSayItWrites()
     {
         using var box = Box();
@@ -229,7 +229,7 @@ public sealed class SetupRunTextTests
         Assert.DoesNotContain("This will write", Setup(box, "--codex").Plan);
     }
 
-    [Fact]
+    [WindowsFact]
     public void ARemovalPlanDoesNotSayAnEntryIsThere()
     {
         using var box = Box();
@@ -244,7 +244,7 @@ public sealed class SetupRunTextTests
         Assert.Empty(Directory.GetFiles(Path.GetDirectoryName(Toml(box))!, "*.bak"));
     }
 
-    [Fact]
+    [WindowsFact]
     public void AReplacedEntryIsSaidWithItsCopy()
     {
         using var box = Box();
@@ -264,7 +264,7 @@ public sealed class SetupRunTextTests
         Assert.DoesNotContain("still turned off", ran.Out);
     }
 
-    [Theory]
+    [WindowsTheory]
     [InlineData("\"env\":{\"A\":\"1\"},\"env\":{\"B\":\"2\"}")]
     [InlineData("\"args\":[],\"args\":[]")]
     public void AClaudeEntryThatHoldsAKeyTwiceIsSaidReplacedWithItsCopy(string twice)
@@ -285,7 +285,7 @@ public sealed class SetupRunTextTests
         }
     }
 
-    [Fact]
+    [WindowsFact]
     public void ASubtableThatWasThereBeforeTheTableIsNamed()
     {
         using var box = Box();
@@ -296,7 +296,7 @@ public sealed class SetupRunTextTests
 
     // An entry whose command is there but unread, one with none, and one a subtable of stays: no false reason, and
     // not the whole of it.
-    [Theory]
+    [WindowsTheory]
     [InlineData("[mcp_servers.housecarl]\ncommand = '''C:\\x\\housecarl-mcp.exe'''\n")]
     [InlineData("[mcp_servers.housecarl]\nenabled = false\n")]
     [InlineData("[mcp_servers.housecarl]\nurl = 'u'\n\n[mcp_servers.other]\ncommand = 'x'\n\n[mcp_servers.housecarl.env]\nA = '1'\n")]
@@ -315,7 +315,7 @@ public sealed class SetupRunTextTests
         }
     }
 
-    [Fact]
+    [WindowsFact]
     public void ASubtableLeftOutsideAReplacedTableIsNamed()
     {
         using var box = Box();
@@ -325,7 +325,7 @@ public sealed class SetupRunTextTests
         Assert.Contains("kept your settings on it: env_vars, env" + Environment.NewLine, Setup(box, "--codex").Summary);
     }
 
-    [Fact]
+    [WindowsFact]
     public void ANumberedCopyIsNamedInThePlanAndTheSummary()
     {
         using var box = Box();
@@ -338,7 +338,7 @@ public sealed class SetupRunTextTests
         Assert.Contains("is kept in config.toml.houseCARL.2.bak", ran.Summary);
     }
 
-    [Fact]
+    [WindowsFact]
     public void ARemovalSummaryNamesItsNumberedCopy()
     {
         using var box = Box();
@@ -355,7 +355,7 @@ public sealed class SetupRunTextTests
     }
 
     // Like the held config below it is not a stop at the plan; and no copy is taken, so none is promised.
-    [Fact]
+    [WindowsFact]
     public void AConfigThatDoesNotParseIsReportedByTheRunNotThePlan()
     {
         using var box = Box();
@@ -370,7 +370,7 @@ public sealed class SetupRunTextTests
     }
 
     // Pins unchanged behaviour: a config another program holds open is the "fully quit" refusal, not a stop at the plan.
-    [Fact]
+    [WindowsFact]
     public void AHeldConfigIsReportedByTheRunNotThePlan()
     {
         using var box = Box();

@@ -200,7 +200,7 @@ public sealed class MalformedMeshWorld : IDisposable
 
     static void WriteMesh(string mod, string rel, byte[] bytes)
     {
-        var path = Path.Combine(mod, rel);
+        var path = DiskPath.Join(mod, rel);
         Directory.CreateDirectory(Path.GetDirectoryName(path)!);
         File.WriteAllBytes(path, bytes);
     }

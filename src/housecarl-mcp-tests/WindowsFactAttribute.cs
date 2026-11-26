@@ -10,3 +10,12 @@ public sealed class WindowsFactAttribute : FactAttribute
         if (!OperatingSystem.IsWindows()) Skip = "Windows only.";
     }
 }
+
+/// <summary>A theory that reports as skipped, not passed, off Windows.</summary>
+public sealed class WindowsTheoryAttribute : TheoryAttribute
+{
+    public WindowsTheoryAttribute()
+    {
+        if (!OperatingSystem.IsWindows()) Skip = "Windows only.";
+    }
+}

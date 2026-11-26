@@ -1,3 +1,4 @@
+using HousecarlCore;
 using HousecarlGenerator;
 
 namespace HousecarlMcpTests;
@@ -15,7 +16,7 @@ static class ResolverArchives
     const uint Named = BsaBuilder.HasFolderNames | BsaBuilder.HasFileNames;
 
     static (string, (string, byte[])[]) Entry(string rel, string tag)
-        => (Path.GetDirectoryName(rel)!, new[] { (Path.GetFileName(rel), BsaBuilder.Bytes(tag, 16)) });
+        => (DiskPath.DirectoryName(rel)!, new[] { (DiskPath.FileName(rel), BsaBuilder.Bytes(tag, 16)) });
 
     public static byte[] A() => BsaBuilder.Build(105, Named, new[] { Entry(FacegenRel, "A-FACE"), Entry(RankRel, "A-RANK") });
 
@@ -38,7 +39,7 @@ static class ResolverArchives
 
     public static void Loose(string baseDir, string rel, string body = "x")
     {
-        var p = Path.Combine(baseDir, rel);
+        var p = DiskPath.Join(baseDir, rel);
         Directory.CreateDirectory(Path.GetDirectoryName(p)!);
         File.WriteAllText(p, body);
     }

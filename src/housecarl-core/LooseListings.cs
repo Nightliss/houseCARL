@@ -45,12 +45,11 @@ public sealed class LooseListings
     /// <summary>How many directories this call has listed; a test seam.</summary>
     internal int ListingCount => Volatile.Read(ref _count);
 
-    /// <summary>The one join of a Data-relative path, or a folder name, onto a disk folder. On Windows it is the
-    /// plain join; a case-folding match per segment is where a case-sensitive file system would need one.</summary>
-    public static string OnDisk(string folder, string logical) => Path.Combine(folder, logical);
+    /// <summary>The one join of a Data-relative path, or a folder name, onto a disk folder: the plain join on Windows, the case-matched one elsewhere (<see cref="DiskPath.Join"/>).</summary>
+    public static string OnDisk(string folder, string logical) => DiskPath.Join(folder, logical);
 
     /// <summary>As <see cref="OnDisk(string, string)"/> over two segments.</summary>
-    public static string OnDisk(string folder, string logical, string more) => Path.Combine(folder, logical, more);
+    public static string OnDisk(string folder, string logical, string more) => DiskPath.Join(DiskPath.Join(folder, logical), more);
 
     /// <summary>This call's listing of <paramref name="dir"/>, taken now if it is the first touch;
     /// <paramref name="fresh"/> runs only when this read took it.</summary>
@@ -101,8 +100,10 @@ public sealed class LooseListings
         var dirs = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
         // Only FILES may resolve: a directory reported as an asset is the silently wrong answer. Names only, no
         // FileSystemInfo per entry: a call can list every folder under meshes\.
+        // Walks rely on NTFS name order; Unix lists in directory-hash order.
         foreach (var (name, isDir) in new FileSystemEnumerable<(string, bool)>(dir,
-                     (ref FileSystemEntry e) => (e.FileName.ToString(), e.IsDirectory), Everything))
+                     (ref FileSystemEntry e) => (e.FileName.ToString(), e.IsDirectory), Everything)
+                     .OrderBy(e => e.Item1, StringComparer.OrdinalIgnoreCase))
         {
             names.Add(name);
             if (isDir) dirs.Add(name);

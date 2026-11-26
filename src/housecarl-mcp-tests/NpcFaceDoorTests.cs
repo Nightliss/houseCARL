@@ -423,7 +423,7 @@ public sealed class NpcFaceDoorTests : IClassFixture<NpcFaceDoorWorld>
     {
         static bool Linked(INpcGetter n, IRaceGetter race)
             => n.EnumerateAssetLinks(AssetLinkQuery.Resolved, NpcFace.RaceCache(race))
-                .Any(l => l.DataRelativePath.Path.Contains(@"\facegendata\", StringComparison.OrdinalIgnoreCase));
+                .Any(l => DiskPath.Logical(l.DataRelativePath.Path).Contains(@"\facegendata\", StringComparison.OrdinalIgnoreCase));
         Assert.True(Linked(_w.Plain, _w.W.Race));
         Assert.False(Linked(_w.UseTemplate, _w.W.Race));
         Assert.False(Linked(_w.TraitsAlone, _w.W.Race));

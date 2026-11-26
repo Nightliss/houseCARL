@@ -82,7 +82,7 @@ public sealed class ProfileRewriteTests
 
         static void Loose(string modDir, string rel)
         {
-            var p = Path.Combine(modDir, rel);
+            var p = DiskPath.Join(modDir, rel);
             Directory.CreateDirectory(Path.GetDirectoryName(p)!);
             File.WriteAllText(p, "x");
         }
@@ -96,7 +96,7 @@ public sealed class ProfileRewriteTests
 
     /// <summary>Nothing is built yet, so there is no answer to serve: the call says the profile file is held and to
     /// run it again, in place of the internal-failure sentence.</summary>
-    [Fact]
+    [WindowsFact]
     public void AColdAssetCallOnAHeldProfileNamesTheHoldInsteadOfAnInternalFailure()
     {
         using var w = new RewriteWorld();
@@ -111,7 +111,7 @@ public sealed class ProfileRewriteTests
     /// <summary>The kept build, both halves: while the profile cannot be re-read the asset answer is the one the old
     /// build gives AND says it is, and because the baseline was never advanced the very next call after the hold is
     /// released follows the new profile. The second assertion is what catches a keep that freezes for good.</summary>
-    [Fact]
+    [WindowsFact]
     public void AWarmAssetCallAnswersOffTheKeptBuildSaysSoAndFollowsTheProfileOnceItIsFree()
     {
         using var w = new RewriteWorld();
@@ -138,7 +138,7 @@ public sealed class ProfileRewriteTests
     /// <summary>The first record call after the hold is released reads the profile for itself, and that read is a
     /// refresh for the asset lane too: the kept asset build is dropped there, or the baseline it advances would leave
     /// the next asset call matching, the pending flag cleared, and the old answer served with nothing said.</summary>
-    [Fact]
+    [WindowsFact]
     public void AColdRecordBuildAfterAHoldDoesNotStrandTheKeptAssetBuild()
     {
         using var w = new RewriteWorld();
@@ -162,7 +162,7 @@ public sealed class ProfileRewriteTests
     /// tool goes through rather than on a tool: a tool call would also need this world to generate the whole write
     /// rulebook, which has nothing to do with the behaviour under test. The sentence a caller reads off this
     /// exception is the cold asset test above, through the same tool guard.</summary>
-    [Fact]
+    [WindowsFact]
     public void TheRecordIndexRefusesRatherThanAnswerOffASupersededBuild()
     {
         using var w = new RewriteWorld();
@@ -179,7 +179,7 @@ public sealed class ProfileRewriteTests
 
     /// <summary>The vacuity check on the tests above: with the hold released the same cold call resolves normally, so
     /// none of them is asserting against a world that was broken to begin with.</summary>
-    [Fact]
+    [WindowsFact]
     public void OnceTheHoldIsReleasedTheSameColdCallResolvesNormally()
     {
         using var w = new RewriteWorld();
@@ -205,7 +205,7 @@ public sealed class ProfileRewriteTests
 
     /// <summary>The read itself names the hold, so every lane that reads the profile gets the same sentence rather
     /// than each tool catching a raw IOException of its own.</summary>
-    [Fact]
+    [WindowsFact]
     public void ReadingAProfileWhoseFileIsHeldThrowsTheNamedTransient()
     {
         using var w = new RewriteWorld();

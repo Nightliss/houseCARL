@@ -281,7 +281,7 @@ public sealed class CallContextTests : IDisposable
 
     /// <summary>A cold file read after a records call, while MO2 holds the edited modlist.txt: the asset build answers off
     /// the order's kept profile read and says the answer is off the earlier build.</summary>
-    [Fact]
+    [WindowsFact]
     public void AColdFileReadWhileTheProfileIsHeldAnswersOffTheKeptReadAndSaysSo()
     {
         Call(() => Assert.Contains("HcCcWeap", RecordsTools.Records(_svc, formids: new[] { _weapon })));

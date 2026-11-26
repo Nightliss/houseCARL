@@ -860,7 +860,7 @@ public sealed class SkseTransportTests
 
     /// <summary>The pairing family straight into its render, at the cap the row arrays' unreserved framing used to
     /// carry it over: a non-empty unreadable list leaves nothing to absorb the framing written past the last row.</summary>
-    [Fact]
+    [WindowsFact]
     public void ThePairingFamilysUnreadableListDoesNotPushItsDocumentOverTheCap()
     {
         string json = NativePairingWire.RenderJson(Pairing(300, unreadable: 50), null, 2_680);

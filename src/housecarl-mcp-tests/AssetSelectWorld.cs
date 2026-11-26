@@ -136,15 +136,15 @@ public sealed class AssetSelectWorld : IDisposable
                     (FaceGeomDir, new[] { ("0005.nif", BsaBuilder.Bytes("NIF-0005", 48)) }),
                     (pairGeomDir, new[]
                     {
-                        (Path.GetFileName(Face(SplitFormId, FaceGenSlot.Mesh)), BsaBuilder.Bytes("NIF-SPLIT", 48)),
-                        (Path.GetFileName(Face(ArchivePairFormId, FaceGenSlot.Mesh)), BsaBuilder.Bytes("NIF-ARCH", 48)),
+                        (DiskPath.FileName(Face(SplitFormId, FaceGenSlot.Mesh)), BsaBuilder.Bytes("NIF-SPLIT", 48)),
+                        (DiskPath.FileName(Face(ArchivePairFormId, FaceGenSlot.Mesh)), BsaBuilder.Bytes("NIF-ARCH", 48)),
                     }),
                 }));
         // The SAME mod's second archive, the way the game splits meshes from textures. Two provider names, one
         // owning mod — which is what a split has to be decided on.
         File.WriteAllBytes(Path.Combine(archiveMod, "HcArch - Textures.bsa"),
             BsaBuilder.Build(105, BsaBuilder.HasFolderNames | BsaBuilder.HasFileNames,
-                new[] { (pairTintDir, new[] { (Path.GetFileName(Face(ArchivePairFormId, FaceGenSlot.Tint)), BsaBuilder.Bytes("DDS-ARCH", 48)) }) }));
+                new[] { (pairTintDir, new[] { (DiskPath.FileName(Face(ArchivePairFormId, FaceGenSlot.Tint)), BsaBuilder.Bytes("DDS-ARCH", 48)) }) }));
 
         FaceNpcPlugin.Write(data, PairMaster, 0x0B0B0B, 0x0C0C0C, 0x0D0D0D, 0x0E0E0E);
         FaceNpcPlugin.Write(data, Master, 0x000ABC);
@@ -162,7 +162,7 @@ public sealed class AssetSelectWorld : IDisposable
 
     static void Loose(string modDir, string rel)
     {
-        var p = Path.Combine(modDir, rel);
+        var p = DiskPath.Join(modDir, rel);
         Directory.CreateDirectory(Path.GetDirectoryName(p)!);
         File.WriteAllText(p, "x");
     }

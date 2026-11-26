@@ -19,7 +19,7 @@ public sealed class AssetRootWalkFailureTests : IDisposable
 
     static string Named(AssetStatusData d) => string.Join(" | ", d.RootFailures);
 
-    [Fact]
+    [WindowsFact]
     public void ALooseRootThatThrowsMidWalkIsNamedInTheAnswer()
     {
         Assert.True(_w.Denied, UnreadableRootWorld.NotStaged);
@@ -35,7 +35,7 @@ public sealed class AssetRootWalkFailureTests : IDisposable
 
     /// <summary>The single-path lane rides a different read — the per-subtree listing, not the recursive walk — and
     /// names the root the same way, so an ABSENT on a blocked root is hedged rather than stated flat.</summary>
-    [Fact]
+    [WindowsFact]
     public void AnExplicitPathUnderAnUnreadableRootIsNamedInTheAnswer()
     {
         Assert.True(_w.Denied, UnreadableRootWorld.NotStaged);
@@ -110,7 +110,7 @@ public sealed class AssetProvedAbsenceTests : IDisposable
     public void ASelectorThatNamesAFileRaisesNoRootFailure()
     {
         Directory.CreateDirectory(Path.Combine(_mod, "meshes"));
-        File.WriteAllText(Path.Combine(_mod, @"meshes\a.nif"), "x");
+        File.WriteAllText(DiskPath.Join(_mod, @"meshes\a.nif"), "x");
 
         using var r = Build();
         r.EnumerateUnder(@"meshes\a.nif");

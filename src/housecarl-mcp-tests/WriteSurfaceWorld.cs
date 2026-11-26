@@ -174,7 +174,7 @@ public sealed class WriteSurfaceWorld : IDisposable
         var mod = render.Contains("mod folder: ", StringComparison.Ordinal)
             ? render[(render.IndexOf("mod folder: ", StringComparison.Ordinal) + 12)..].Split('\n')[0].Split("  ")[0].Trim()
             : null;
-        return mod is null ? null : Path.Combine(ModsDir, mod, file);
+        return mod is null ? null : DiskPath.Join(Path.Combine(ModsDir, mod), file);
     }
 
     public void Dispose()

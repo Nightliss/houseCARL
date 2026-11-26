@@ -114,7 +114,7 @@ public static class Mo2LoadOrder
     /// <summary>Why <paramref name="modsDir"/> exists but will not open, or null when it opens or is absent; one entry is read, not the folder.</summary>
     public static string? ModsFolderFailure(string modsDir)
     {
-        if (string.IsNullOrWhiteSpace(modsDir) || !Directory.Exists(modsDir)) return null;
+        if (string.IsNullOrWhiteSpace(modsDir) || !DiskPath.DirectoryOrDanglingLink(modsDir)) return null;
         try
         {
             using var e = Directory.EnumerateFileSystemEntries(modsDir, "*", Strict).GetEnumerator();
@@ -141,7 +141,7 @@ public static class Mo2LoadOrder
         string.IsNullOrWhiteSpace(modsDir) ? [] : mods.Where(m => WillNotOpen(LooseListings.OnDisk(modsDir, m))).ToList();
 
     /// <summary>An enumeration that throws on a folder that will not open, rather than reading it as empty; hidden and system files are skipped, as before.</summary>
-    static readonly EnumerationOptions Strict = new() { RecurseSubdirectories = false, IgnoreInaccessible = false };
+    static readonly EnumerationOptions Strict = new() { RecurseSubdirectories = false, IgnoreInaccessible = false, MatchCasing = MatchCasing.CaseInsensitive };
 
     /// <summary>Parse the profile's enabled/disabled composition from the three profile text files; <see cref="Build"/> adds the physical-path resolution on top.</summary>
     public static Mo2Composition ReadComposition(string profileDir, List<string>? warnings = null)
@@ -179,15 +179,16 @@ public static class Mo2LoadOrder
             warnings?.Add($"modlist.txt not found at '{modlistPath}' — duplicate-name plugins cannot be priority-resolved.");
             return;
         }
+        bool amethyst = AmethystInstance.IsProfileDir(Path.GetDirectoryName(modlistPath) ?? "");
         foreach (var raw in ReadProfileLines(modlistPath))
         {
-            var line = raw.TrimEnd();
+            var line = amethyst ? raw.TrimEnd('\r', '\n') : raw.TrimEnd();
             if (line.Length == 0 || line[0] == '#') continue;
             char marker = line[0];
-            if (marker != '+' && marker != '-') continue;           // only +/- lines are mods
-            var name = line[1..].Trim();
+            if (marker != '+' && marker != '-' && !(amethyst && marker == '*')) continue;   // only +/- lines are mods; Amethyst's * is an always-on mod
+            var name = amethyst ? line[1..] : line[1..].Trim();
             if (name.Length == 0 || name.EndsWith("_separator", StringComparison.OrdinalIgnoreCase)) continue;
-            (marker == '+' ? enabled : disabled).Add(name);
+            (marker == '-' ? disabled : enabled).Add(name);
         }
     }
 
@@ -219,7 +220,7 @@ public static class Mo2LoadOrder
     /// <summary>As <see cref="EnumeratePlugins"/>, but null for a folder that exists and will not open; a missing one is empty.</summary>
     static List<(string fn, string full)>? ListPlugins(string dir)
     {
-        if (string.IsNullOrWhiteSpace(dir) || !Directory.Exists(dir)) return [];
+        if (string.IsNullOrWhiteSpace(dir) || !DiskPath.DirectoryOrDanglingLink(dir)) return [];
         try { return Directory.EnumerateFiles(dir, "*.es*", Strict).Where(PluginFile.IsPlugin).Select(f => (Path.GetFileName(f), f)).ToList(); }
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException) { return null; }
     }
@@ -323,7 +324,7 @@ public static class Mo2LoadOrder
     {
         yield return (overwriteDir, "overwrite", true);
         foreach (var mod in comp.EnabledMods) yield return (LooseListings.OnDisk(modsDir, mod), $"mod '{mod}' (enabled)", true);
-        foreach (var mod in enabledOnly ? [] : comp.DisabledMods) yield return (Path.Combine(modsDir, mod), $"mod '{mod}' (DISABLED)", false);
+        foreach (var mod in enabledOnly ? [] : comp.DisabledMods) yield return (LooseListings.OnDisk(modsDir, mod), $"mod '{mod}' (DISABLED)", false);
         foreach (var dir in enabledOnly ? [] : UnlistedModFolders(comp, modsDir))
             yield return (dir, $"mod '{Path.GetFileName(dir)}' (UNLISTED)", false);
         yield return (dataDir, "game Data", true);

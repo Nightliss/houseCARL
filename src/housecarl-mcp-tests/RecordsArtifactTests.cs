@@ -153,7 +153,7 @@ public sealed class RecordsArtifactTests : ArtifactTestBase, IClassFixture<Artif
     /// <summary>A failed <c>to_file=</c> write must not take the caller's existing file with it. The whole artifact
     /// is written to a temp first, so the failure here lands on the move INTO the destination — after every byte was
     /// written — and the file the caller already had is still exactly what it was, with the temp cleaned up.</summary>
-    [Fact]
+    [WindowsFact]
     public void ToFile_AWriteThatFailsAfterItStartedLeavesTheCallersFileAsItWas()
     {
         var art = Art("held-target.jsonl");

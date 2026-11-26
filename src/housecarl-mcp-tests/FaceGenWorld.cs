@@ -1,3 +1,4 @@
+using HousecarlCore;
 using System.Security.AccessControl;
 using System.Security.Principal;
 using Mutagen.Bethesda;
@@ -219,7 +220,8 @@ public class FaceGenWorld : IDisposable
                     File.WriteAllBytes(Path.Combine(bsaDir, bsa), new byte[] { 0xDE, 0xAD, 0xBE, 0xEF });
 
             // Deny listing only, not inherited (as LocalizedModFolderUnreadableTests does), so the bake still resolves by traverse.
-            if (OperatingSystem.IsWindows())
+            if (!OperatingSystem.IsWindows()) { UnlistedStaged = DenyAce.TryDenyList(_unlistedDir); }
+            else
             {
                 var dir = new DirectoryInfo(_unlistedDir);
                 var acl = dir.GetAccessControl();
@@ -248,7 +250,7 @@ public class FaceGenWorld : IDisposable
 
     static void Loose(string modDir, string rel)
     {
-        var p = Path.Combine(modDir, rel);
+        var p = DiskPath.Join(modDir, rel);
         Directory.CreateDirectory(Path.GetDirectoryName(p)!);
         File.WriteAllText(p, "x");
     }
@@ -258,6 +260,7 @@ public class FaceGenWorld : IDisposable
     {
         try
         {
+            if (!OperatingSystem.IsWindows() && Directory.Exists(_unlistedDir)) DenyAce.UndenyList(_unlistedDir);
             if (_unlistedDeny is not null && OperatingSystem.IsWindows())
             {
                 var dir = new DirectoryInfo(_unlistedDir);

@@ -34,7 +34,7 @@ public sealed class SkseImportWalkTests
     }
 
     // probe E: "a real native PE's import directory WALKS"; "…and yields its imports"
-    [Fact]
+    [WindowsFact]
     public void ARealNativePesImportDirectoryWalksToANonEmptyList()
     {
         Assert.True(File.Exists(Kernel32), Kernel32);
@@ -44,7 +44,7 @@ public sealed class SkseImportWalkTests
     }
 
     // probe E: "import names are normalized lower-case for comparison"
-    [Fact]
+    [WindowsFact]
     public void ImportNamesAreLowerCase()
     {
         var info = SksePluginReader.Read(Kernel32);
@@ -53,14 +53,14 @@ public sealed class SkseImportWalkTests
     }
 
     // probe E: "a system DLL is still classified NotSkse (no SKSE export)"
-    [Fact]
+    [WindowsFact]
     public void ASystemDllIsClassifiedNotSkse()
     {
         Assert.Equal(SksePluginReader.SksePluginKind.NotSkse, SksePluginReader.Read(Kernel32).Kind);
     }
 
     // probe E2: "an unresolvable import-name RVA fails the WHOLE walk → null (UNKNOWN), never a silent short list"
-    [Fact]
+    [WindowsFact]
     public void AnUnresolvableImportNameFailsTheWholeWalk()
     {
         var raw = File.ReadAllBytes(Kernel32);

@@ -17,7 +17,7 @@ public sealed class SeqOutputContractTests
         => OutputLocations.SeqOutputContract(outDir, Mods, Data, overwrite);
 
     // Probe PURE-SEQ-CONTRACT: "SEQ\ appended once" (a bare root).
-    [Fact]
+    [WindowsFact]
     public void ABareRootGetsSeqAppended()
     {
         var c = Contract(@"C:\MyMod");
@@ -26,7 +26,7 @@ public sealed class SeqOutputContractTests
     }
 
     // Probe PURE-SEQ-CONTRACT: "double-SEQ guard case-insensitive + trailing-separator tolerant".
-    [Theory]
+    [WindowsTheory]
     [InlineData(@"C:\MyMod\SEQ", @"C:\MyMod\SEQ")]
     [InlineData(@"C:\MyMod\seq\", @"C:\MyMod\seq")]
     public void ARootAlreadyEndingInSeqIsNotDoubled(string given, string want)
@@ -37,7 +37,7 @@ public sealed class SeqOutputContractTests
     }
 
     // Probe PURE-SEQ-OVERWRITE: "<overwrite>\SEQ deploys when the overwrite root is known, and is judged only on that root (not by name)".
-    [Fact]
+    [WindowsFact]
     public void TheOverwriteFolderDeploysOnlyWhenItsRootIsKnown()
     {
         Assert.Null(Contract(Over, Over).deployWarning);
@@ -45,14 +45,14 @@ public sealed class SeqOutputContractTests
     }
 
     // Probe PURE-SEQ-ROOT: "a drive root appends correctly (want C:\SEQ, never the drive-relative C:SEQ)".
-    [Fact]
+    [WindowsFact]
     public void ADriveRootKeepsItsSeparator()
     {
         Assert.Equal(@"C:\SEQ", Contract(@"C:\").seqDir);
     }
 
     // Probe PURE-SEQ-DEPLOY: "<mods>\<mod>\SEQ and <data>\SEQ deploy".
-    [Theory]
+    [WindowsTheory]
     [InlineData(@"C:\MO2\mods\MyMod")]
     [InlineData(Data)]
     public void AModFolderOrTheDataFolderIsDeployable(string given)
@@ -61,7 +61,7 @@ public sealed class SeqOutputContractTests
     }
 
     // Probe PURE-SEQ-DEPLOY: "the mods root, a nested path and an outside path warn".
-    [Theory]
+    [WindowsTheory]
     [InlineData(@"C:\MO2\mods")]
     [InlineData(@"C:\MO2\mods\X\Sub")]
     [InlineData(@"C:\Elsewhere\MyMod")]
@@ -71,7 +71,7 @@ public sealed class SeqOutputContractTests
     }
 
     // Probe PURE-SEQ-DEPLOY: "the warning names the silent-death consequence".
-    [Fact]
+    [WindowsFact]
     public void TheWarningNamesTheSilentDeathConsequence()
     {
         Assert.Contains("silently", Contract(@"C:\Elsewhere\MyMod").deployWarning);

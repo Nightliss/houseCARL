@@ -133,7 +133,7 @@ public sealed class CompactSeqRegenTests : IDisposable
     }
 
     // SEQ-WARN locked .seq dest → named write-failure WARN, compact STILL succeeds
-    [Fact]
+    [WindowsFact]
     public void ASeqThatCannotBeWrittenDegradesToAWarning()
     {
         var (mods, inst) = Instance("warn", "SeqWarn", m => AddQuest(m, 0x900, "HcSeqQ", Quest.Flag.StartGameEnabled));

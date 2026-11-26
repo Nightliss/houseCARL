@@ -25,7 +25,7 @@ public static class AssetWalkEdges
     {
         foreach (var l in body.EnumerateAssetLinks(AssetLinkQuery.Inferred, cache))
         {
-            var p = l.DataRelativePath.Path;
+            var p = DiskPath.Logical(l.DataRelativePath.Path);
             if (p.EndsWith(".psc", StringComparison.OrdinalIgnoreCase)) continue;
             if (p.EndsWith(".pex", StringComparison.OrdinalIgnoreCase))
                 yield return new WalkEdge(ScriptPex(p[(p.IndexOf('\\') + 1)..^".pex".Length]), WalkEdgeKind.Script);
@@ -81,7 +81,7 @@ public static class AssetWalkEdges
     /// scene, the quest's voice-type gating).</summary>
     public static IReadOnlyList<string> Voice(IDialogResponsesGetter info, IAssetLinkCache cache)
         => info.EnumerateAssetLinks(AssetLinkQuery.Resolved, cache)
-               .Select(l => l.DataRelativePath.Path)
+               .Select(l => DiskPath.Logical(l.DataRelativePath.Path))
                .Where(p => p.StartsWith(@"Sound\Voice\", StringComparison.OrdinalIgnoreCase))
                .Distinct(StringComparer.OrdinalIgnoreCase).ToList();
 

@@ -1,15 +1,8 @@
 using HousecarlMcp;
 using ModelContextProtocol.Protocol;
 
-// houseCARL MCP server over stdio. It reads the active load order statically from the configured MO2 instance. On
-// Windows an empty config still boots.
-
-// Windows only for now: on any other OS the server refuses here, before any tool can answer.
-if (SupportedPlatform.Refusal(SupportedPlatform.IsWindows()) is { } wrongOs)
-{
-    Console.Error.WriteLine(wrongOs);
-    return 1;
-}
+// houseCARL MCP server over stdio. It reads the active load order statically from the configured MO2 or Amethyst
+// instance. An empty config still boots.
 
 // The optional cut on the published schemas, read before the host is built; a bad value stops the start here.
 int? maxSchemaDepth;

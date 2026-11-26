@@ -117,6 +117,8 @@ internal static class AbsentWords
             HiddenKind.RootName => "root_name",
             HiddenKind.SkipDirectory => "skip_directory",
             HiddenKind.SkipSuffix => "skip_suffix",
+            HiddenKind.ModExcluded => "mod_excluded",
+            HiddenKind.RootRouted => "root_routed",
         },
         ["match"] = h.Rule.Token,
         ["hidden_path"] = h.HiddenPath,

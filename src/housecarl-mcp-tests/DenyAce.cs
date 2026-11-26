@@ -12,6 +12,7 @@ static class DenyAce
     /// it has already been taken back off — a fixture that did not build is a failure, never a quiet pass.</summary>
     public static bool TryDeny(string dir)
     {
+        if (!OperatingSystem.IsWindows()) return TryChmod(dir, UnixFileMode.None);
         try
         {
             var me = WindowsIdentity.GetCurrent().Name;
@@ -32,6 +33,8 @@ static class DenyAce
     /// subfolder. False means the ACE did not bite on this host, and it has already been taken back off.</summary>
     public static bool TryDenyNewSubfolders(string dir)
     {
+        if (!OperatingSystem.IsWindows())
+            return TryChmod(dir, UnixFileMode.UserRead | UnixFileMode.UserExecute);
         try
         {
             var di = new DirectoryInfo(dir);
@@ -51,6 +54,7 @@ static class DenyAce
     /// <summary>Take the new-subfolder deny off again.</summary>
     public static void UndenyNewSubfolders(string dir)
     {
+        if (!OperatingSystem.IsWindows()) { Restore(dir); return; }
         try
         {
             var di = new DirectoryInfo(dir);
@@ -68,6 +72,7 @@ static class DenyAce
     /// <summary>Take the deny ACE off again — left behind, it would block the temp tree's own cleanup.</summary>
     public static void Undeny(string dir)
     {
+        if (!OperatingSystem.IsWindows()) { Restore(dir); return; }
         try
         {
             var me = WindowsIdentity.GetCurrent().Name;
@@ -77,5 +82,52 @@ static class DenyAce
             di.SetAccessControl(sec);
         }
         catch { /* cleanup is best effort; the temp tree goes either way */ }
+    }
+
+    /// <summary>Deny only listing (traverse stays) on one directory. False means it did not bite (running as root).</summary>
+    public static bool TryDenyList(string dir) =>
+        OperatingSystem.IsWindows() ? throw new PlatformNotSupportedException() : TryChmod(dir, UnixFileMode.UserWrite | UnixFileMode.UserExecute);
+
+    /// <summary>Lift a <see cref="TryDenyList"/> off Windows.</summary>
+    public static void UndenyList(string dir) => Restore(dir);
+
+    static bool TryChmod(string dir, UnixFileMode mode)
+    {
+        try
+        {
+            File.SetUnixFileMode(dir, mode);
+            try { Directory.EnumerateFiles(dir, "*").ToList(); if (mode.HasFlag(UnixFileMode.UserRead)) return DeniedCreate(dir); }
+            catch (UnauthorizedAccessException) { return true; }
+            Restore(dir);
+            return false;
+        }
+        catch { return false; }
+    }
+
+    static bool DeniedCreate(string dir)
+    {
+        var probe = Path.Combine(dir, ".deny-probe-" + Guid.NewGuid().ToString("N"));
+        try { Directory.CreateDirectory(probe); Directory.Delete(probe); }
+        catch (UnauthorizedAccessException) { return true; }
+        Restore(dir);
+        return false;
+    }
+
+    static void Restore(string dir)
+    {
+        try { File.SetUnixFileMode(dir, UnixFileMode.UserRead | UnixFileMode.UserWrite | UnixFileMode.UserExecute | UnixFileMode.GroupRead | UnixFileMode.GroupExecute | UnixFileMode.OtherRead | UnixFileMode.OtherExecute); }
+        catch { }
+    }
+}
+
+/// <summary>A directory link: a junction on Windows, a symlink elsewhere.</summary>
+static class DirLink
+{
+    public static void Make(string link, string target)
+    {
+        if (!OperatingSystem.IsWindows()) { Directory.CreateSymbolicLink(link, target); return; }
+        using var mk = System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo("cmd.exe", $"/c mklink /J \"{link}\" \"{target}\"")
+            { UseShellExecute = false, CreateNoWindow = true, RedirectStandardOutput = true });
+        mk!.WaitForExit();
     }
 }

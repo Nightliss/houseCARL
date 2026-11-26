@@ -1,0 +1,1 @@
+- **houseCARL now runs on Linux and reads an Amethyst Mod Manager profile.** Loose files resolve in subfolders in any casing; point `housecarl_set_mo2_instance` at a profile folder (or a profile root with `profile=`), and new plugins land in the profile's overwrite folder.

@@ -61,8 +61,8 @@ public static class Mo2ModMeta
     /// <summary>The folder MO2 would keep a loose file's meta.ini in — the file's path with its Data-relative tail removed; null when the path does not end in that tail or what is left is a bare drive.</summary>
     public static string? ModRootForLooseFile(string looseFilePath, string dataRelativePath)
     {
-        var tail = dataRelativePath.Replace('/', Path.DirectorySeparatorChar);
-        var full = looseFilePath.Replace('/', Path.DirectorySeparatorChar);
+        var tail = dataRelativePath.Replace('/', Path.DirectorySeparatorChar).Replace('\\', Path.DirectorySeparatorChar);
+        var full = looseFilePath.Replace('/', Path.DirectorySeparatorChar).Replace('\\', Path.DirectorySeparatorChar);
         if (!full.EndsWith(tail, StringComparison.OrdinalIgnoreCase)) return null;
         var root = full[..(full.Length - tail.Length)].TrimEnd(Path.DirectorySeparatorChar);
         return root.Length == 0 || root.EndsWith(':') ? null : root;

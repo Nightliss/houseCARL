@@ -763,11 +763,11 @@ sealed class DegradedOrderWorld : IDisposable
         }
         PluginFile = Path.Combine(pluginMod, LockedPlugin);
 
-        var asset = Path.Combine(assetMod, AssetPath);
+        var asset = HousecarlCore.DiskPath.Join(assetMod, AssetPath);
         Directory.CreateDirectory(Path.GetDirectoryName(asset)!);
         File.WriteAllText(asset, "x");
 
-        var sweep = Path.Combine(assetMod, SweepDir);
+        var sweep = HousecarlCore.DiskPath.Join(assetMod, SweepDir);
         Directory.CreateDirectory(sweep);
         for (int i = 0; i < SweepFiles; i++) File.WriteAllText(Path.Combine(sweep, $"{i:0000}.nif"), "x");
 

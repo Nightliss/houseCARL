@@ -40,6 +40,7 @@ internal sealed class OutputLocations
         // Naming both lanes is refused before any folder is touched.
         if (LaneSentences.PatchIntoFolderRefusal(patchName, into, naming?.Noun ?? "output") is { } lane) throw new InvalidOperationException(lane);
         var roots = snapshot.Roots;
+        if (roots.OverwriteOutput) return OverwriteRiderFolder(roots, into, patchName, defaultStem);
         if (!Directory.Exists(roots.ModsDir))
             throw new InvalidOperationException($"cannot write: ModsDir '{roots.ModsDir}' does not exist.");
 
@@ -60,6 +61,26 @@ internal sealed class OutputLocations
             WriteOwnerMeta(newFolder, "(houseCARL output)");   // ownership marker; this folder may hold scripts / a .bsa / loose files, not an .esp
             return new RiderFolder(newFolder, newFolder, CreatedFresh: true, newStem);
         }
+    }
+
+    /// <summary>Amethyst: output rides the overwrite folder, the one writable layer it indexes on a refresh and plugin sync. It is not a houseCARL mod folder, so there is nothing to reuse with <c>into=</c> and nothing a refused write may delete.</summary>
+    static RiderFolder OverwriteRiderFolder(Mo2Roots roots, string? into, string? patchName, string defaultStem)
+    {
+        if (!string.IsNullOrWhiteSpace(into)) throw new InvalidOperationException(OverwriteIntoRefusal);
+        Directory.CreateDirectory(roots.OverwriteDir);
+        return new RiderFolder(roots.OverwriteDir, roots.OverwriteDir, CreatedFresh: false, PatchStem(string.IsNullOrWhiteSpace(patchName) ? defaultStem : patchName!));
+    }
+
+    internal const string OverwriteIntoRefusal = "into= names a houseCARL mod folder, and under an Amethyst profile houseCARL writes into the profile's overwrite folder instead, which holds no such folders. Pass patch= for a new file, or edit the plugin in place.";
+
+    /// <summary>Where a new patch named <paramref name="stem"/> goes: its own <c>houseCARL - stem</c> mod folder, or the overwrite folder under Amethyst.</summary>
+    internal static string PatchFolderFor(Mo2Roots roots, string stem) =>
+        roots.OverwriteOutput ? roots.OverwriteDir : LooseListings.OnDisk(roots.ModsDir, ModFolderName(stem));
+
+    /// <summary>Stamp a fresh patch folder with the ownership marker; the overwrite folder is shared, so it carries none.</summary>
+    internal static void MarkOwned(Mo2Roots roots, string folder, string plugin)
+    {
+        if (!roots.OverwriteOutput) WriteOwnerMeta(folder, plugin);
     }
 
     /// <summary>The <c>Scripts\</c> output folder for a compiled .pex, under a houseCARL mod folder, which MO2 deploys into the game's Data\Scripts.</summary>
@@ -451,7 +472,9 @@ internal sealed class OutputLocations
 
     /// <summary>Null when a stem is free to claim, else the sentence naming WHICH of the two tests is in the way, so a refusing lane can say it.</summary>
     static string? StemCollision(Mo2Roots roots, string stem, IReadOnlySet<string> activePlugins)
-        => Directory.Exists(LooseListings.OnDisk(roots.ModsDir, ModFolderName(stem)))
+        => roots.OverwriteOutput && PluginExts.Any(ext => File.Exists(LooseListings.OnDisk(roots.OverwriteDir, stem + ext)))
+            ? $"a plugin named '{stem}' already sits in the overwrite folder"
+            : !roots.OverwriteOutput && Directory.Exists(LooseListings.OnDisk(roots.ModsDir, ModFolderName(stem)))
             ? $"a mod folder '{ModFolderName(stem)}' already exists"
             : activePlugins.Contains(stem + ".esp")
                 ? $"a plugin named '{stem}.esp' is already active in your load order"

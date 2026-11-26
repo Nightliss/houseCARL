@@ -289,7 +289,7 @@ internal sealed partial class AssetLayers
         int otherFiles = 0;
         foreach (var rel in view.EnumerateUnder("SKSE\\Plugins").OrderBy(p => p, StringComparer.OrdinalIgnoreCase))
         {
-            var ext = Path.GetExtension(rel).ToLowerInvariant();
+            var ext = DiskPath.Extension(rel).ToLowerInvariant();
             bool isDll = ext is ".dll";
             bool isConfig = ext is ".ini" or ".toml" or ".json" or ".yaml" or ".yml";
             if (!isDll && !isConfig) { otherFiles++; continue; }  // content/other (.hkx/.txt/.pdb/…) — counted, not listed
@@ -321,7 +321,7 @@ internal sealed partial class AssetLayers
                 else note = "provided ONLY inside a BSA — the SKSE loader scans loose Data\\SKSE\\Plugins only, so this DLL will not load";
                 if (group.Length > 0 && note is null)
                     note = $"in subfolder '{group}' — NOT on SKSE's loader path (scans SKSE\\Plugins\\*.dll top-level only); a bundled/parent-loaded DLL, not a plugin SKSE loads";
-                var entry = new SkseFileEntry(rel, Path.GetFileName(rel), group, providers, info, note, ModVersion: modVersion);
+                var entry = new SkseFileEntry(rel, DiskPath.FileName(rel), group, providers, info, note, ModVersion: modVersion);
                 // String peek only for a loose winner — the copy SKSE would load (docs/architecture/skse-layer.md).
                 if (peekFilter is { Length: > 0 } && entry.MatchesDll(peekFilter)
                     && winner is { Kind: AssetKind.Loose, LooseFilePath: { } peekPath })
@@ -329,7 +329,7 @@ internal sealed partial class AssetLayers
                 dlls.Add(entry);
             }
             else
-                configs.Add(new SkseFileEntry(rel, Path.GetFileName(rel), group, providers, null, null));
+                configs.Add(new SkseFileEntry(rel, DiskPath.FileName(rel), group, providers, null, null));
         }
         return new SkseInventoryData(dlls, configs, otherFiles, _host.InstalledGameRuntime(), view.BsaFailures, view.RootFailures,
             view.ReadIncomplete, warnings, profileName, activePlugins, peekFilter is { Length: > 0 });
@@ -379,7 +379,7 @@ internal sealed partial class AssetLayers
         var files = new List<SkseConfigFileAudit>();
         foreach (var rel in view.EnumerateUnder("SKSE\\Plugins").OrderBy(p => p, StringComparer.OrdinalIgnoreCase))
         {
-            var ext = Path.GetExtension(rel).ToLowerInvariant();
+            var ext = DiskPath.Extension(rel).ToLowerInvariant();
             if (ext is not (".ini" or ".toml" or ".json" or ".yaml" or ".yml")) continue;   // configs only (DLLs/content are SkseInventory's)
             if (SkyPatcherDiscovery.IsSkyPatcherIni(rel)) continue;   // SkyPatcher's INIs are the layer tool's to read
 
@@ -408,7 +408,7 @@ internal sealed partial class AssetLayers
             var audited = new List<SkseAuditedRef>(extracted.Count);
             foreach (var r in extracted) audited.Add(Adjudicate(r, index));
 
-            files.Add(new SkseConfigFileAudit(rel, Path.GetFileName(rel), group,
+            files.Add(new SkseConfigFileAudit(rel, DiskPath.FileName(rel), group,
                 winner?.ProviderName, providers.Count, providers, audited, readError, multiLine,
                 ArchiveOnly: winner is { Kind: AssetKind.Bsa }));   // a loose copy always outranks an archive's
         }
@@ -486,7 +486,7 @@ internal sealed partial class AssetLayers
         var modDlls = new Dictionary<string, List<NativePairedDll>>(StringComparer.OrdinalIgnoreCase);
         foreach (var rel in view.EnumerateUnder("SKSE\\Plugins").OrderBy(p => p, StringComparer.OrdinalIgnoreCase))
         {
-            if (!Path.GetExtension(rel).Equals(".dll", StringComparison.OrdinalIgnoreCase)) continue;
+            if (!DiskPath.Extension(rel).Equals(".dll", StringComparison.OrdinalIgnoreCase)) continue;
             string group = SkseGroupOf(rel, skseRootPre);
             var place = view.ResolveForPlacement(rel);
             var winner = place.Sources.Count > 0 ? place.Sources[0] : null;
@@ -501,7 +501,7 @@ internal sealed partial class AssetLayers
                 {
                     // PE-screen the packed copy too: a packed NotSkse dependency must not count as a candidate.
                     if (view.ReadEntry(winner.ArchivePath!, winner.EntryPath) is { } bytes)
-                        info = SksePluginReader.ReadBytes(Path.GetFileName(rel), bytes);
+                        info = SksePluginReader.ReadBytes(DiskPath.FileName(rel), bytes);
                 }
                 catch { /* unreadable archive rides the view's BsaFailures caveat; the candidate keeps its blocker */ }
                 if (info?.Kind == SksePluginReader.SksePluginKind.NotSkse) continue;
@@ -515,7 +515,7 @@ internal sealed partial class AssetLayers
             if (blocker is null && group.Length > 0)
                 blocker = $"in subfolder '{group}' — not on SKSE's loader path (scans SKSE\\Plugins\\*.dll top-level only)";
 
-            var dll = new NativePairedDll(rel, Path.GetFileName(rel), group, winner?.ProviderName, info, blocker);
+            var dll = new NativePairedDll(rel, DiskPath.FileName(rel), group, winner?.ProviderName, info, blocker);
             foreach (var src in place.Sources)
             {
                 var mod = PairingIdentity(src, archiveShipper);
@@ -526,7 +526,7 @@ internal sealed partial class AssetLayers
 
         // ---- the .pex sweep: each winner parsed off its loose file or through the view's archive reader. ----
         var pexPaths = view.EnumerateUnder("Scripts")
-            .Where(p => Path.GetExtension(p).Equals(".pex", StringComparison.OrdinalIgnoreCase))
+            .Where(p => DiskPath.Extension(p).Equals(".pex", StringComparison.OrdinalIgnoreCase))
             .OrderBy(p => p, StringComparer.OrdinalIgnoreCase).ToList();
 
         var natives = new System.Collections.Concurrent.ConcurrentBag<(string Rel, IReadOnlyList<HousecarlCore.NativeClassDecl> Decls)>();
@@ -611,9 +611,10 @@ internal sealed partial class AssetLayers
         {
             static bool LoaderIn(string dir) => Directory.Exists(dir)
                 && (File.Exists(LooseListings.OnDisk(dir, "skse64_loader.exe"))
-                    || Directory.EnumerateFiles(dir, "skse64_*.dll").Any());
+                    || Directory.EnumerateFiles(dir, "skse64_*.dll", DiskPath.IgnoreCase).Any());
             var gameDir = captured.Roots.DataDir.Length > 0 ? Path.GetDirectoryName(captured.Roots.DataDir.TrimEnd('\\', '/')) : null;
             loaderSeen = (gameDir is { Length: > 0 } && LoaderIn(gameDir))
+                || (captured.Roots.RootFolderDir is { Length: > 0 } rootFolder && LoaderIn(rootFolder))
                 || (captured.Roots.ModsDir.Length > 0 && enabledMods.Any(m => LoaderIn(LooseListings.OnDisk(captured.Roots.ModsDir, m, "Root"))));
         }
         catch { loaderSeen = null; }
@@ -1161,7 +1162,7 @@ internal sealed partial class AssetLayers
         int pipe = v.IndexOf('|');
         if (ModsPathAddress.Split(pipe >= 0 ? v.Substring(0, pipe) : v, modsRoot) is not { } hit) return null;
         var remedy = bothSlots
-            ? $"Address that archive instead with source_provider='{Path.GetFileName(hit.RelPath ?? v)}' and no source= — a BSA filename is a provider name, and each FaceGen slot then derives its own entry from that archive."
+            ? $"Address that archive instead with source_provider='{DiskPath.FileName(hit.RelPath ?? v)}' and no source= — a BSA filename is a provider name, and each FaceGen slot then derives its own entry from that archive."
             : ModsPathAddress.Address(hit.ModFolder, hit.RelPath is null || pipe < 0 ? hit.RelPath : hit.RelPath + v.Substring(pipe),
                                       "source", "source_provider");
         return ModsPathAddress.Refusal("", v, remedy);
@@ -1377,8 +1378,7 @@ internal sealed partial class AssetLayers
     static bool IsVfsSource(string source)
     {
         if (source.IndexOf('|') >= 0) return false;                      // '<archive.bsa>|<entry>' — an entry, not a path
-        if (!Path.IsPathFullyQualified(source)) return true;             // Data-relative ⇒ the VFS answers, whatever it ends in
-        return false;                                                    // a volume or UNC path ⇒ one exact file (or archive) on disk
+        return !DiskPath.NamesDiskPath(source);
     }
 
 }

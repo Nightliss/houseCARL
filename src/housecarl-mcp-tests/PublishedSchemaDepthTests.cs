@@ -317,16 +317,12 @@ public sealed class PublishedSchemaDepthTests : IClassFixture<CappedSchemaServer
     /// left. A refusal exits before the transport, so there is no handshake to drive.</summary>
     static (int Exit, string Stderr) Boot(string value)
     {
-        var exe = Path.Combine(HarnessPaths.RepoRoot, "src", "housecarl-mcp", "bin",
-                               HarnessPaths.Configuration, HarnessPaths.TargetFramework, "housecarl-mcp.exe");
-        var psi = new ProcessStartInfo(exe)
-        {
-            RedirectStandardInput = true,
-            RedirectStandardOutput = true,
-            RedirectStandardError = true,
-            UseShellExecute = false,
-            StandardErrorEncoding = Encoding.UTF8,
-        };
+        var psi = HarnessPaths.ServerStart();
+        psi.RedirectStandardInput = true;
+        psi.RedirectStandardOutput = true;
+        psi.RedirectStandardError = true;
+        psi.UseShellExecute = false;
+        psi.StandardErrorEncoding = Encoding.UTF8;
         psi.Environment[SchemaDepthCap.Variable] = value;
 
         using var proc = Process.Start(psi)!;

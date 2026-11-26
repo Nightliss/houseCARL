@@ -98,7 +98,7 @@ public static class DecompileTools
         {
             var p = (raw ?? "").Trim().Trim('"');
             if (p.Length == 0) continue;
-            if (Path.IsPathFullyQualified(p)) entries.Add(new(p, true));
+            if (HousecarlCore.DiskPath.NamesDiskPath(p)) entries.Add(new(p, true));
             else if (p.IndexOf('/') < 0 && p.IndexOf('\\') < 0) bare.Add(p);
             else entries.Add(new(p, false));
         }

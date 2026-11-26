@@ -88,15 +88,13 @@ public sealed class StatusFilterLookupsTests : IClassFixture<StatusFilterLookups
     }
 
     /// <summary>A mod folder that will not open (a dangling junction) is named, so a folder carrying the id is not taken for none.</summary>
-    [Fact]
+    [WindowsFact]
     public void AModFolderThatWillNotOpenIsNamed()
     {
         var link = Path.Combine(_w.Mods, "GoneFolder");
         var target = Path.Combine(_w.Root, "gone-folder");
         Directory.CreateDirectory(target);
-        using (var mk = System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo("cmd.exe", $"/c mklink /J \"{link}\" \"{target}\"")
-                   { UseShellExecute = false, CreateNoWindow = true, RedirectStandardOutput = true }))
-            mk!.WaitForExit();
+        DirLink.Make(link, target);
         Directory.Delete(target);
         string text;
         try

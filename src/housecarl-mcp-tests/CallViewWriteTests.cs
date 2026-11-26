@@ -43,7 +43,7 @@ public sealed class CallViewWriteTests : IDisposable
         Directory.CreateDirectory(Path.Combine(_mo2.ModsDir, "AFace", "SEQ"));
         File.WriteAllBytes(Path.Combine(_mo2.ModsDir, "AFace", "SEQ", "HcCvA.seq"), new byte[] { 0x00, 0x08, 0x00, 0x00 });
         // The voice file the line the create test makes would speak, shipped in a loose mod of its own.
-        var fuz = Path.Combine(_mo2.ModsDir, "VFace",
+        var fuz = DiskPath.Join(Path.Combine(_mo2.ModsDir, "VFace"),
             VoicePath.For(new FormKey(new ModKey("CvCreate", ModType.Plugin), 0x800), "HcCvVoice", "HcCvQuestA", "HcCvTopic", 1, VoiceFile.Fuz));
         Directory.CreateDirectory(Path.GetDirectoryName(fuz)!);
         File.WriteAllBytes(fuz, new byte[] { 0, 1, 2 });
@@ -59,7 +59,7 @@ public sealed class CallViewWriteTests : IDisposable
     {
         foreach (var (_, rel) in FaceGenPath.Both(npc))
         {
-            var p = Path.Combine(_mo2.ModsDir, mod, rel);
+            var p = DiskPath.Join(Path.Combine(_mo2.ModsDir, mod), rel);
             Directory.CreateDirectory(Path.GetDirectoryName(p)!);
             File.WriteAllBytes(p, new byte[] { 0xFA, 0xCE });
         }

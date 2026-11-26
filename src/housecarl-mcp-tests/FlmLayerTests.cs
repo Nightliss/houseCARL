@@ -56,7 +56,7 @@ sealed class FlmWorld : IDisposable
 
         foreach (var (name, text) in files)
         {
-            var p = Path.Combine(IniMod, name);
+            var p = DiskPath.Join(IniMod, name);
             Directory.CreateDirectory(Path.GetDirectoryName(p)!);
             File.WriteAllText(p, text);
         }

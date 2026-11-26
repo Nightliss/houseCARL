@@ -2,7 +2,7 @@ namespace HousecarlCore;
 
 /// <summary>Which of MO2's rules hides a loose path: a root name MO2 leaves out of its own Data view, a skip-list
 /// folder, or a skip-list suffix.</summary>
-public enum HiddenKind { RootName, SkipDirectory, SkipSuffix }
+public enum HiddenKind { RootName, SkipDirectory, SkipSuffix, ModExcluded, RootRouted }
 
 /// <summary>One rule that hides a loose path, with the name it matched (the root name, the folder, or the suffix).</summary>
 public sealed record HiddenRule(HiddenKind Kind, string Token)
@@ -13,6 +13,8 @@ public sealed record HiddenRule(HiddenKind Kind, string Token)
         HiddenKind.RootName => $"left out of MO2's Data view as a root {Token}; the game still maps it",
         HiddenKind.SkipDirectory => $"skipped by MO2's VFS, under a '{Token}' folder",
         HiddenKind.SkipSuffix => $"skipped by MO2's VFS, by the '{Token}' suffix",
+        HiddenKind.ModExcluded => "switched off for this mod in Amethyst's Mod Files tab, so it is not deployed",
+        HiddenKind.RootRouted => "routed by Amethyst to the game root, so it is not in Data",
     };
 }
 
@@ -58,6 +60,22 @@ public sealed class HiddenTally
 /// readme.txt or fomod folder, which MO2 leaves out of its own Data view (docs/architecture/assets.md, Visibility).</summary>
 public sealed record Mo2SkipRules(IReadOnlyList<string> FileSuffixes, IReadOnlyList<string> Directories)
 {
+    /// <summary>Amethyst's per-mod switches: raw mod-relative paths (lower case, forward slash) of files it does not deploy, by mod folder name.</summary>
+    public IReadOnlyDictionary<string, IReadOnlySet<string>>? ExcludedByMod { get; init; }
+
+    /// <summary>Amethyst's per-mod raw paths it deploys to the game root instead of Data, by mod folder name.</summary>
+    public IReadOnlyDictionary<string, IReadOnlySet<string>>? RootRoutedByMod { get; init; }
+
+    /// <summary>Amethyst keeps its own bookkeeping names (<c>meta.ini</c> at any depth) out of Data, and MO2's root readme and fomod rules do not apply.</summary>
+    public bool Amethyst { get; init; }
+
+    /// <summary>Whether any rule depends on which mod holds the file.</summary>
+    public bool PerMod => ExcludedByMod is { Count: > 0 } || RootRoutedByMod is { Count: > 0 };
+
+    /// <summary>The names Amethyst never deploys.</summary>
+    static readonly string[] AmethystNames =
+        ["meta.ini", ".mm_overwrite_log.txt", ".mm_merge_inventory.xml", "vortex_override_instructions.json", ".amethyst_vortex_sources.json"];
+
     public const string SuffixesKey = "skip_file_suffixes";
     public const string DirectoriesKey = "skip_directories";
 
@@ -67,12 +85,26 @@ public sealed record Mo2SkipRules(IReadOnlyList<string> FileSuffixes, IReadOnlyL
     /// <summary>The rule that hides this Data-relative loose path, or null when it shows. Root name first, then skip
     /// folder, then skip suffix. The skip lists apply only to a <paramref name="linked"/> root, a mod or overwrite:
     /// the game's own Data folder is never linked, so only the root names hide there.</summary>
-    public HiddenRule? Hides(string relPath, bool linked)
+    public HiddenRule? Hides(string relPath, bool linked, string? mod = null)
     {
         // Span segments, not Split: the folder walk asks this once per file.
         var rest = relPath.AsSpan();
-        if (HiddenAtRoot(rest) is { } root) return new HiddenRule(HiddenKind.RootName, root);
+        if (Amethyst)
+        {
+            var leaf = DiskPath.FileName(relPath);
+            foreach (var n in AmethystNames)
+                if (leaf.Equals(n, StringComparison.OrdinalIgnoreCase)) return new HiddenRule(HiddenKind.RootName, n);
+        }
+        else if (HiddenAtRoot(rest) is { } root) return new HiddenRule(HiddenKind.RootName, root);
         if (!linked) return null;
+        if (mod is not null && PerMod)
+        {
+            var key = relPath.Replace('\\', '/').ToLowerInvariant();
+            if (ExcludedByMod is not null && ExcludedByMod.TryGetValue(mod, out var off) && off.Contains(key))
+                return new HiddenRule(HiddenKind.ModExcluded, key);
+            if (RootRoutedByMod is not null && RootRoutedByMod.TryGetValue(mod, out var routed) && routed.Contains(key))
+                return new HiddenRule(HiddenKind.RootRouted, key);
+        }
         for (int sep; (sep = rest.IndexOf('\\')) >= 0; rest = rest[(sep + 1)..])
             foreach (var d in Directories)
                 if (rest[..sep].Equals(d, StringComparison.OrdinalIgnoreCase)) return new HiddenRule(HiddenKind.SkipDirectory, d);

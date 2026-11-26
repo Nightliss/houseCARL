@@ -130,7 +130,7 @@ public sealed class PatchWriteTests : IDisposable
 
     /// <summary>The target is held open by another program, so the swap fails after the patch is staged; the staged
     /// file is removed with its folder and the target is untouched.</summary>
-    [Fact]
+    [WindowsFact]
     public void AFailedCommitLeavesNoStagingFolder()
     {
         var target = Path.Combine(_dir, "HcStageLockedPatch.esp");

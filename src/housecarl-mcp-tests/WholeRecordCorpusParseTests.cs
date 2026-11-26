@@ -29,7 +29,7 @@ public sealed class WholeRecordCorpusParseTests : IDisposable
         CorpusRulebook.CorpusPath = fresh;
         try
         {
-            string ReadAll() => RecordsTools.Records(_w.Svc, formids: ids,
+            string ReadAll() => RecordsTools.Records(_w.Svc, formids: ids, max_chars: 400_000,
                                                      project: new RecordsTools.RecordsProject { form = "everything" });
             var r = ReadAll();
             Assert.False(r.StartsWith("error:", StringComparison.Ordinal), r);

@@ -178,9 +178,9 @@ public sealed class NifSelectionTests : IDisposable
     [Fact]
     public void AModsTreePathAloneNamesItsLoadOrderAddress()
     {
-        var good = Path.Combine(_p.Mod("Arch"), LooseRel);
+        var good = DiskPath.Join(_p.Mod("Arch"), LooseRel);
         PlaceInstance.Loose(_p.Mod("Fix"), @"meshes\hcns\bad.nif", BsaBuilder.Bytes("HCNS-NOT-A-NIF", 32));
-        var bad = Path.Combine(_p.Mod("Fix"), @"meshes\hcns\bad.nif");
+        var bad = DiskPath.Join(_p.Mod("Fix"), @"meshes\hcns\bad.nif");
 
         var ok = NifTools.NifInspect(_svc, paths: new[] { good });
         var failed = NifTools.NifInspect(_svc, paths: new[] { bad });
@@ -196,7 +196,7 @@ public sealed class NifSelectionTests : IDisposable
     [Fact]
     public void AModsTreePathAloneTakesNoAssetView()
     {
-        var good = Path.Combine(_p.Mod("Arch"), LooseRel);
+        var good = DiskPath.Join(_p.Mod("Arch"), LooseRel);
         NifTools.NifInspect(_svc, paths: new[] { Arch1 });   // builds the asset view, so a later capture counts a freshness check
         var files = _svc.Counters.FileFreshnessChecks;
 
@@ -210,7 +210,7 @@ public sealed class NifSelectionTests : IDisposable
     [Fact]
     public void JsonAndToFileRowsOfAModsTreeFileCarryItsAddress()
     {
-        var good = Path.Combine(_p.Mod("Arch"), LooseRel);
+        var good = DiskPath.Join(_p.Mod("Arch"), LooseRel);
         var file = Path.Combine(_p.Root, "hcns-disknote.jsonl");
         var address = $"paths=[\"{LooseRel}\"] source_provider=\"Arch\" reads that copy through the load order.";
 

@@ -67,7 +67,7 @@ public sealed class SetupSkillPruneTests
 
     // T5: a read-only leftover cannot be deleted; the install still finishes and registers both hosts, the run
     // names the folder, and the Codex record keeps it so the next upgrade tries again.
-    [Fact]
+    [WindowsFact]
     public void AReadOnlyLeftoverDoesNotStopMcpRegistration()
     {
         using var box = new SetupInstallerSandbox();

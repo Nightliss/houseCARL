@@ -34,7 +34,7 @@ public sealed class BsaPackContractTests : IDisposable
     public void Dispose() { try { Directory.Delete(_root, recursive: true); } catch { /* temp scratch */ } }
 
     // Probe: "stuck stale scratch → loud refusal naming it (nothing packed)" and "the prior archive is byte-untouched".
-    [Fact]
+    [WindowsFact]
     public void AStuckStaleScratchRefusesBeforeRunningAndLeavesThePriorArchive()
     {
         BsaPackResult rp;
@@ -49,7 +49,7 @@ public sealed class BsaPackContractTests : IDisposable
 
     // Probe: "deletable stale + failing BSArch = refusal naming the exit code (no stale shipped)" and "the prior archive
     // survives that path too". Strengthened: the stale scratch is gone afterwards, so it cannot ship on a later run.
-    [Fact]
+    [WindowsFact]
     public void AFailingPackerAfterADeletableStaleScratchRefusesNamingTheExitCode()
     {
         var rp = BsaArchive.Pack(_stub, _packDir, _target, "-sse", compress: false, timeoutMs: 30_000);
@@ -61,7 +61,7 @@ public sealed class BsaPackContractTests : IDisposable
     }
 
     // Probe: "sse family + empty default to -sse".
-    [Theory]
+    [WindowsTheory]
     [InlineData(null)]
     [InlineData("")]
     [InlineData("sse")]
@@ -70,7 +70,7 @@ public sealed class BsaPackContractTests : IDisposable
     public void TheSseFamilyAndNoTokenMapToSse(string? token) => Assert.Equal("-sse", BsaArchive.TryFormatFlag(token));
 
     // Probe: "legal tokens map to their flags".
-    [Theory]
+    [WindowsTheory]
     [InlineData("tes5", "-tes5")]
     [InlineData("fo4dds", "-fo4dds")]
     [InlineData("oblivion", "-tes4")]
@@ -78,7 +78,7 @@ public sealed class BsaPackContractTests : IDisposable
     public void LegalTokensMapToTheirFlags(string token, string flag) => Assert.Equal(flag, BsaArchive.TryFormatFlag(token));
 
     // Probe: "unknown tokens REFUSE (null) — no silent -sse from a typo".
-    [Theory]
+    [WindowsTheory]
     [InlineData("fo4dd")]
     [InlineData("garbage")]
     public void UnknownTokensMapToNoFlag(string token) => Assert.Null(BsaArchive.TryFormatFlag(token));

@@ -106,7 +106,7 @@ public sealed class AssetWalkTests : IClassFixture<AssetWalkWorld>
         var placed = PlaceTools.Place(_w.Svc, doc.RootElement, source_provider: AssetWalkWorld.DonorMod, patch: "HcWalkPlaced");
         Assert.Contains("placed 3", placed, StringComparison.OrdinalIgnoreCase);
         // The donor's bytes were placed, not the enabled base mod's older copy of the same path.
-        var placedTex = Path.Combine(_w.ModsDir, "houseCARL - HcWalkPlaced", AssetWalkWorld.DonorTex);
+        var placedTex = DiskPath.Join(Path.Combine(_w.ModsDir, "houseCARL - HcWalkPlaced"), AssetWalkWorld.DonorTex);
         Assert.True(File.Exists(placedTex), placed);
         Assert.Equal(AssetWalkWorld.DonorBytes, File.ReadAllBytes(placedTex));
     }

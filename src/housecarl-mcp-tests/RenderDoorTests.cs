@@ -107,7 +107,7 @@ public sealed class RenderDoorTests : IClassFixture<RenderDoorWorld>
 
     // A cut window spills every row, so the receipt counts the window's bodies and the whole read's, and the window
     // note and the file match the same list read whole on the formids= lane, where no window read applies.
-    [Fact]
+    [WindowsFact]
     public void ACutWalkWindowSpillsTheWholeListAsTheWholeReadDoes()
     {
         var walked = RecordsTools.Records(_w.Svc, formids: new[] { Seed }, walk: Reverse(), limit: 40, max_chars: 3000, project: Kw());

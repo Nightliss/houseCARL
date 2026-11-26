@@ -243,8 +243,8 @@ public sealed class AssetResolver : IDisposable
     {
         // ---- loose, in MO2 precedence order — via the per-subtree cache (warmed on first touch) ----
         var opened = AsWindowsOpens(rel);                          // the loose lookup only: an archive entry is matched as asked
-        var subtreeDir = Normalize(Path.GetDirectoryName(opened) ?? "");
-        var fname = Path.GetFileName(opened);
+        var subtreeDir = Normalize(DiskPath.DirectoryName(opened));
+        var fname = DiskPath.FileName(opened);
         var st = Subtree(subtreeDir, snap, listings);
         var loose = new List<PlacementSource>();
         // A file MO2 hides is not in the Data view, whichever root holds it; archives are not filtered.
@@ -262,7 +262,7 @@ public sealed class AssetResolver : IDisposable
         foreach (var (rootIndex, files) in st.Present)               // Present is already in precedence order
         {
             bool linked = !IsDataRoot(rootIndex);
-            var rule = linked ? linkedRule : dataRule;
+            var rule = linked ? (_skip.PerMod ? _skip.Hides(opened, linked: true, _looseRoots[rootIndex].Name) : linkedRule) : dataRule;
             if (files.Contains(fname))
             {
                 if (rule is null)
@@ -458,7 +458,7 @@ public sealed class AssetResolver : IDisposable
                     if (!listing.IsFile(name)) { if (!topLevelOnly) pending.Enqueue(f); continue; }
                     // Re-rooted on the NORMALIZED prefix, not sliced off rootDir, which would carry the caller's casing.
                     var rel = withSep + Normalize(f.Substring(baseDir.Length));
-                    if (_skip.Hides(rel, linked) is not { } rule) Take(rel);
+                    if (_skip.Hides(rel, linked, rootName) is not { } rule) Take(rel);
                     // In scope, and dropped: the hidden name, or for a twin x.mohidden the x it hides.
                     else if (hidden is not null && (keep is null || keep(rel)
                              || (rule.Kind == HiddenKind.SkipSuffix && keep(rel[..^rule.Token.Length]))))
@@ -735,7 +735,7 @@ public sealed class AssetResolver : IDisposable
         }
         if (!provedAbsent) return;                                     // not proved: a name listed that will not stat, or an ancestor that will not list
         // One level above the root, because the root's own folder can be the missing one.
-        var floor = (Path.GetDirectoryName(rootDir.TrimEnd('\\')) ?? "").Length;
+        var floor = (Path.GetDirectoryName(rootDir.TrimEnd('\\', '/')) ?? "").Length;
         var child = dir;
         for (var up = Path.GetDirectoryName(child); up is not null; child = up, up = Path.GetDirectoryName(up))
         {
@@ -778,7 +778,7 @@ public sealed class AssetResolver : IDisposable
         var (name, dir) = _looseRoots[at];
         bool linked = !IsDataRoot(at);
         var top = listings.Descend(dir, []);
-        if (top.Listing is { } listing) return listing.Files.Where(n => _skip.Hides(n, linked) is null).ToList();
+        if (top.Listing is { } listing) return listing.Files.Where(n => _skip.Hides(n, linked, name) is null).ToList();
         if (Directory.Exists(dir))
         {
             RecordRootFailure(name, "", "read", top.Failure!, snap);
@@ -821,7 +821,7 @@ public sealed class AssetResolver : IDisposable
     static bool WalkProvesAbsent(string rootDir, string dir, Func<string, bool> exists, Func<string, HashSet<string>?> list)
     {
         // One level above the root, because the root's own folder can be the unreadable one.
-        var floor = (Path.GetDirectoryName(rootDir.TrimEnd('\\')) ?? "").Length;
+        var floor = (Path.GetDirectoryName(rootDir.TrimEnd('\\', '/')) ?? "").Length;
         var child = dir;
         for (var up = Path.GetDirectoryName(child); up is not null; child = up, up = Path.GetDirectoryName(up))
         {
@@ -887,7 +887,7 @@ public sealed class AssetResolver : IDisposable
     static string NormalizeQueryPath(string relPath)
     {
         var rel = Normalize(relPath);
-        if (Path.IsPathRooted(rel))
+        if (DiskPath.IsDriveRooted(rel))
             throw new ArgumentException($"expected a Data-relative asset path, got a drive-rooted path: '{relPath}'");
         var kept = new List<string>();
         foreach (var seg in rel.Split('\\'))

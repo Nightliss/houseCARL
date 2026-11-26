@@ -163,6 +163,7 @@ public sealed class LocalizedCompactWorld : IDisposable
     /// <summary>Deny the current user ListDirectory on <paramref name="dir"/>, and report whether the deny took.</summary>
     static bool TryDenyListing(string dir)
     {
+        if (!OperatingSystem.IsWindows()) return DenyAce.TryDenyList(dir);
         try
         {
             var me = System.Security.Principal.WindowsIdentity.GetCurrent().Name;
@@ -185,6 +186,7 @@ public sealed class LocalizedCompactWorld : IDisposable
     /// <summary>Lift the deny <see cref="TryDenyListing"/> added; a failure throws, so a denied folder never sits in TEMP unseen.</summary>
     static void UndenyListing(string dir)
     {
+        if (!OperatingSystem.IsWindows()) { DenyAce.UndenyList(dir); return; }
         var me = System.Security.Principal.WindowsIdentity.GetCurrent().Name;
         var di = new DirectoryInfo(dir);
         var sec = di.GetAccessControl();

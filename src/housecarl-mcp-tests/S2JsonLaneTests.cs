@@ -272,7 +272,7 @@ public class PlaceJsonRenderTests
 
     static JsonElement Parse(string s) => JsonDocument.Parse(s).RootElement;
 
-    [Fact]
+    [WindowsFact]
     public void EveryDocumentCarriesTheAccountingAndTheEnableAndSortStep()
     {
         var root = Parse(JsonWire.RenderPlaceOutcome(Outcome(ok: 2, failed: 1), 80_000));

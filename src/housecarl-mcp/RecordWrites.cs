@@ -718,11 +718,12 @@ internal sealed partial class RecordWrites
         // Naming both lanes is refused before any folder is touched.
         if (LaneSentences.PatchIntoRefusal(patchName, into) is { } lane) throw new InvalidOperationException(lane);
         var roots = snapshot.Roots;
-        if (!Directory.Exists(roots.ModsDir))
+        if (!roots.OverwriteOutput && !Directory.Exists(roots.ModsDir))
             throw new InvalidOperationException($"cannot write: ModsDir '{roots.ModsDir}' does not exist. Check HouseCarl:ModsDir.");
 
         if (!string.IsNullOrWhiteSpace(into))
         {
+            if (roots.OverwriteOutput) throw new InvalidOperationException(OutputLocations.OverwriteIntoRefusal);
             extend = true;
             // The .esp write lane shares the extend resolver with the rider and asset lanes; needEsp:true picks the .esp inside the folder.
             var folder = OutputLocations.ResolveOwnedPatchFolder(roots, into, needEsp: true, freshPatch, noFreshRule);
@@ -741,14 +742,14 @@ internal sealed partial class RecordWrites
         {
             var freeStem = OutputLocations.UniqueStem(roots, active, baseStem, stemFromCaller ?? !string.IsNullOrWhiteSpace(patchName),
                                       new PatchStemShadow.Target(s => s + ".esp", "patch"), refuseTaken);
-            var newFolder = Path.Combine(roots.ModsDir, OutputLocations.ModFolderName(freeStem));
+            var newFolder = OutputLocations.PatchFolderFor(roots, freeStem);
             var plugin = freeStem + ".esp";
             // A dry run (create:false) resolves the would-be path only — no folder, no meta.ini.
             if (create)
             {
                 Directory.CreateDirectory(newFolder);
-                createdFolder = true;
-                OutputLocations.WriteOwnerMeta(newFolder, plugin);
+                createdFolder = !roots.OverwriteOutput;
+                OutputLocations.MarkOwned(roots, newFolder, plugin);
             }
             return Path.Combine(newFolder, plugin);
         }

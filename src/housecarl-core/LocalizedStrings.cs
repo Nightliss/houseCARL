@@ -394,7 +394,7 @@ public static class LocalizedStrings
     {
         string[] archives;
         // THE SAME THREE ANSWERS the loose look has: a folder that could not be listed is not one found to hold no archives.
-        try { archives = Directory.GetFiles(folder, "*.bsa"); }
+        try { archives = Directory.EnumerateFiles(folder, "*.bsa", DiskPath.IgnoreCase).ToArray(); }
         catch (IOException) { return (true, NoArchives); }
         catch (UnauthorizedAccessException) { return (true, NoArchives); }
         if (archives.Length == 0) return (false, NoArchives);

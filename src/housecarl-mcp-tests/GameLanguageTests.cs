@@ -643,7 +643,7 @@ public sealed class GameLanguageTests : IDisposable
         var skyrim = Path.Combine(DataDir, "Skyrim.esm");
         File.Copy(Path.Combine(staging, "Skyrim.esm"), skyrim);
         byte[] Only(params string[] kinds) => BsaBuilder.Build(105, BsaBuilder.HasFolderNames | BsaBuilder.HasFileNames, new[] { ("strings",
-            kinds.Select(k => ($"skyrim_german.{k}", File.ReadAllBytes(Path.Combine(staging, "Strings", $"Skyrim_German.{k}")))).ToArray()) });
+            kinds.Select(k => ($"skyrim_german.{k}", File.ReadAllBytes(DiskPath.Join(staging, $@"Strings\Skyrim_German.{k}")))).ToArray()) });
         var listed = Path.Combine(DataDir, "Skyrim - Interface.bsa");
         var other = Path.Combine(ModDir("Other"), "Other.bsa");
         var extra = Path.Combine(ModDir("Extra"), "Extra.bsa");
@@ -679,7 +679,7 @@ public sealed class GameLanguageTests : IDisposable
         var skyrim = Path.Combine(DataDir, "Skyrim.esm");
         File.Copy(Path.Combine(staging, "Skyrim.esm"), skyrim);
         foreach (var k in new[] { "DLSTRINGS", "ILSTRINGS" })
-            File.Copy(Path.Combine(staging, "Strings", $"Skyrim_German.{k}"), Path.Combine(DataDir, "Strings", $"Skyrim_German.{k}"));
+            File.Copy(DiskPath.Join(staging, $@"Strings\Skyrim_German.{k}"), Path.Combine(DataDir, "Strings", $"Skyrim_German.{k}"));
         var fix = Path.Combine(ModDir("Fix"), "Strings");
         Directory.CreateDirectory(fix);
         File.Copy(Path.Combine(staging, "Strings", "Skyrim_German.STRINGS"), Path.Combine(fix, "Skyrim_German.STRINGS"));

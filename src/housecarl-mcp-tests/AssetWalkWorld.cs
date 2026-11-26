@@ -292,7 +292,7 @@ public sealed class AssetWalkWorld : IDisposable
         Write(cape, DupNif, Mesh(new[] { DupBad }, DupBad));
         Write(cape, BadPex, new byte[] { 1, 2, 3 });
         Directory.CreateDirectory(Path.Combine(cape, "scripts"));
-        PexWriter.WritePex(Path.Combine(cape, ChildPex), "HcWalkChild", "HcWalkParent");
+        PexWriter.WritePex(HousecarlCore.DiskPath.Join(cape, ChildPex), "HcWalkChild", "HcWalkParent");
 
         File.WriteAllText(Path.Combine(profile, "loadorder.txt"), "# header\r\n" + OtherPlugin + "\r\n" + Plugin + "\r\n");
         File.WriteAllText(Path.Combine(profile, "plugins.txt"), "*" + OtherPlugin + "\r\n*" + Plugin + "\r\n");
@@ -354,7 +354,7 @@ public sealed class AssetWalkWorld : IDisposable
 
     static void Write(string modDir, string rel, byte[] bytes)
     {
-        var p = Path.Combine(modDir, rel);
+        var p = DiskPath.Join(modDir, rel);
         Directory.CreateDirectory(Path.GetDirectoryName(p)!);
         File.WriteAllBytes(p, bytes);
     }

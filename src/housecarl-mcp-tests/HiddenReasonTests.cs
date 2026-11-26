@@ -209,7 +209,7 @@ public sealed class HiddenReasonTests : IDisposable
                                                .GetProperty("hidden").GetProperty("rule").GetString());
     }
 
-    [Fact]
+    [WindowsFact]
     public void AWalkToFileNamesTheHiddenColumnOnlyWhenANodeIsHidden()
     {
         // A walk spills whole past max_chars; the file is named in the render.
@@ -512,7 +512,7 @@ public sealed class HiddenReasonTests : IDisposable
         Assert.Contains("ABSENT — hidden by MO2 (skipped by MO2's VFS, by the '.mohidden' suffix) in 'ModC'", t);
     }
 
-    [Fact]
+    [WindowsFact]
     public void AWalkFromAFolderHoldingAHiddenCopyAnotherLayerWinsSaysItIsHidden()
     {
         PlaceInstance.Loose(_p.Mod("ModS"), @"textures\x.dds", X);   // ModS wins x; ModA holds only x.mohidden

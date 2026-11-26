@@ -25,7 +25,7 @@ public static class AssetDataPath
         // A leading separator is dropped as asset_status drops it, so only a drive-rooted string is left rooted.
         var path = AssetResolver.Normalize(raw);
         string? mapped, why;
-        if (Path.IsPathRooted(path))
+        if (DiskPath.IsDriveRooted(path))
         {
             mapped = Rooted(path, kind);
             why = $"a drive-rooted path names a Data path only through the last data folder in it, with {dir} right after that folder";
@@ -49,9 +49,9 @@ public static class AssetDataPath
     {
         try
         {
-            return kind == AssetLinkKind.Texture
+            return DiskPath.Logical(kind == AssetLinkKind.Texture
                 ? new AssetLink<SkyrimTextureAssetType>(path).DataRelativePath.Path
-                : new AssetLink<SkyrimModelAssetType>(path).DataRelativePath.Path;
+                : new AssetLink<SkyrimModelAssetType>(path).DataRelativePath.Path);
         }
         catch (Exception) { return null; }
     }
@@ -63,7 +63,7 @@ public static class AssetDataPath
         var rest = lead ? path[@"data\".Length..] : path;
         // Mutagen's own root test (no separator boundary) and its spelling of an added root.
         if (rest.StartsWith(root, StringComparison.OrdinalIgnoreCase)) return rest;
-        return lead ? null : Path.Combine(root, rest);
+        return lead ? null : root + @"\" + rest;
     }
 
     /// <summary>As <see cref="For"/>, or null when there is no legal Data path to offer.</summary>

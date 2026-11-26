@@ -32,7 +32,7 @@ public sealed class LooseListingsTests : IDisposable
 
     static void Put(string folder, string rel)
     {
-        var p = Path.Combine(folder, rel);
+        var p = DiskPath.Join(folder, rel);
         Directory.CreateDirectory(Path.GetDirectoryName(p)!);
         File.WriteAllText(p, "x");
     }
@@ -62,7 +62,7 @@ public sealed class LooseListingsTests : IDisposable
         Put(_modA, @"meshes\x\b.nif");
         using var r = Build();
         Assert.True(r.Resolve(@"meshes\x\a.nif").Exists);
-        File.Delete(Path.Combine(_modA, @"meshes\x\a.nif"));
+        File.Delete(DiskPath.Join(_modA, @"meshes\x\a.nif"));
 
         var view = r.Capture();
         Assert.Equal(new[] { @"meshes\x\b.nif" }, view.EnumerateUnder(@"meshes\x"));
@@ -129,7 +129,7 @@ public sealed class LooseListingsTests : IDisposable
 
         Assert.Empty(carry.Failures);
         Assert.Equal(2, carry.FilesCarried);
-        Assert.True(File.Exists(Path.Combine(outDir, voice, "Topic_00000902_1.fuz")));
+        Assert.True(File.Exists(DiskPath.Join(outDir, voice + @"\Topic_00000902_1.fuz")));
     }
 
     [Fact]
@@ -180,7 +180,7 @@ public sealed class LooseListingsTests : IDisposable
         using var r = Build();
         var view = r.Capture();
         Assert.True(view.Resolve(@"meshes\x\a.nif").Exists);
-        Directory.Delete(Path.Combine(_modA, @"meshes\x"), true);
+        Directory.Delete(DiskPath.Join(_modA, @"meshes\x"), true);
 
         Assert.Equal(new[] { @"meshes\x\a.nif" }, view.EnumerateUnder(@"meshes\x"));
         Assert.True(view.Resolve(@"meshes\x\a.nif").Exists);
@@ -227,15 +227,13 @@ public sealed class LooseListingsTests : IDisposable
 
     // ---- a subfolder that is not found is skipped, as main's recursive enumeration skipped it ----
 
-    [Fact]
+    [WindowsFact]
     public void ABrokenJunctionBesideAFolderIsSkipped()
     {
         var target = Path.Combine(_root, "nowhere");
         Directory.CreateDirectory(target);
-        var link = Path.Combine(_modA, @"meshes\a_link");
-        using (var mk = System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo("cmd.exe", $"/c mklink /J \"{link}\" \"{target}\"")
-                   { UseShellExecute = false, CreateNoWindow = true, RedirectStandardOutput = true }))
-            mk!.WaitForExit();
+        var link = DiskPath.Join(_modA, @"meshes\a_link");
+        DirLink.Make(link, target);
         Directory.Delete(target);
         Assert.True(Directory.Exists(Path.GetDirectoryName(link)) && new DirectoryInfo(link).LinkTarget is not null, "the junction was not made");
         using var r = Build();
@@ -252,7 +250,7 @@ public sealed class LooseListingsTests : IDisposable
         using var r = Build();
         var view = r.Capture();
         Assert.False(view.Resolve(@"meshes\w.nif").Exists);       // the call lists meshes, a_gone and x in it
-        Directory.Delete(Path.Combine(_modA, @"meshes\a_gone"), true);
+        Directory.Delete(DiskPath.Join(_modA, @"meshes\a_gone"), true);
 
         Assert.Equal(new[] { @"meshes\x\a.nif" }, view.EnumerateUnder("meshes"));
         Assert.Empty(view.RootFailures);
@@ -322,7 +320,7 @@ public sealed class LooseListingsTests : IDisposable
         Assert.False(r.RefreshIfStale());
         Assert.Single(r.Capture().EnumerateUnder("textures"));
 
-        File.Delete(Path.Combine(_modA, @"textures\t\new.dds"));
+        File.Delete(DiskPath.Join(_modA, @"textures\t\new.dds"));
         Assert.Empty(r.Capture().EnumerateUnder("textures"));
     }
 

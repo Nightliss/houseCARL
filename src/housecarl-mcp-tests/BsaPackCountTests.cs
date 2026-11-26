@@ -31,7 +31,7 @@ public sealed class BsaPackCountTests : IDisposable
 
     static void WriteFile(string dir, string relative)
     {
-        var path = Path.Combine(dir, relative);
+        var path = DiskPath.Join(dir, relative);
         Directory.CreateDirectory(Path.GetDirectoryName(path)!);
         File.WriteAllText(path, "x");
     }
@@ -165,7 +165,7 @@ public sealed class BsaPackCountTests : IDisposable
         Assert.Equal(new[] { "readme.txt" }, r.RootSkipped);
     }
 
-    [Fact]
+    [WindowsFact]
     public void ARunThatPackedNothingReportsNoCountAtAll()
     {
         var src = Source("stuck-scratch");

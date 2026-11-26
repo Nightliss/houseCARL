@@ -31,7 +31,7 @@ public class PlaceRenderTests
             .ToList(),
         @"C:\mods\houseCARL - MyFixes", Array.Empty<string>(), null, null) { FreshFolder = fresh };
 
-    [Fact]
+    [WindowsFact]
     public void EveryResponseCarriesTheAccountingInBand()
     {
         var text = PlaceWire.Render(Outcome(ok: 2, failed: 1), 80_000);
@@ -68,7 +68,7 @@ public class PlaceRenderTests
         Assert.DoesNotContain("\"wrote it\" is not \"it wins\"", text);
     }
 
-    [Fact]
+    [WindowsFact]
     public void AFreshFolderOverAnExistingProviderIsToldToEnableOnly_MO2RanksAnUnseenFolderHighest()
     {
         var text = PlaceWire.Render(Outcome(ok: 1, failed: 0, fresh: true), 80_000);
@@ -85,7 +85,7 @@ public class PlaceRenderTests
         Assert.Contains("'houseCARL - MyFixes' out-ranks it once enabled", text);
     }
 
-    [Fact]
+    [WindowsFact]
     public void AnIntoPlacementOverAnExistingProviderIsStillToldToSortAboveIt()
     {
         var text = PlaceWire.Render(Outcome(ok: 1, failed: 0, fresh: false), 80_000);
@@ -108,7 +108,7 @@ public class PlaceRenderTests
         Assert.DoesNotContain("SORT it (left pane)", text);
     }
 
-    [Fact]
+    [WindowsFact]
     public void TheJsonTwinCarriesTheSameLanedInstruction_AJsonCallerActsOnNextStepAlone()
     {
         var fresh = Doc(JsonWire.RenderPlaceOutcome(Outcome(ok: 1, failed: 0, fresh: true), 80_000));
@@ -146,7 +146,7 @@ public class PlaceRenderTests
         Assert.DoesNotContain("SORT it (left pane)", text);
     }
 
-    [Fact]
+    [WindowsFact]
     public void ARePlaceIntoAFolderThatAlreadyWinsIsNotToldToSortItAboveItself()
     {
         var text = PlaceWire.Render(Outcome(ok: 1, failed: 0, fresh: false, destinationWinner: true), 80_000);

@@ -116,7 +116,7 @@ public sealed class Mo2DirectoryKeysTests : IDisposable
     }
 
     // Promise: "Backslash and Qt-escaped values (%BASE_DIR%\\mymods, @ByteArray(...), quoted) resolve the same as /".
-    [Theory]
+    [WindowsTheory]
     [InlineData(@"mod_directory=%BASE_DIR%\\mymods")]
     [InlineData(@"mod_directory=@ByteArray({STOREBS}\\mymods)")]
     [InlineData("mod_directory=\"{STORE}/mymods\"")]
@@ -130,7 +130,7 @@ public sealed class Mo2DirectoryKeysTests : IDisposable
     }
 
     // A key written with a trailing / or \ gives a root with none, so a prefix test under the mods folder still matches.
-    [Theory]
+    [WindowsTheory]
     [InlineData("/")]
     [InlineData(@"\\")]
     public void ATrailingSeparatorOnAKeyIsDropped(string end)
@@ -194,7 +194,7 @@ public sealed class Mo2DirectoryKeysTests : IDisposable
 
     // An instance with no keys keeps the plain Path.Combine text for each root, not normalised: a forward-slashed instance
     // folder prints as given plus \mods (the dev instance's shape).
-    [Fact]
+    [WindowsFact]
     public void AnUnsetKeyKeepsTheCombinedTextExactly()
     {
         var inst = Stage("raw").Replace('\\', '/');

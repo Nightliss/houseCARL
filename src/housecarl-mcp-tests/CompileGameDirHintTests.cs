@@ -21,7 +21,7 @@ public sealed class CompileGameDirHintTests : IDisposable
     }
 
     // Probe A: "explicit mode: GameDirOrNull = DataDir's parent (the game install dir)".
-    [Fact]
+    [WindowsFact]
     public void ExplicitModeGivesTheDataDirsParent()
     {
         var svc = LoadOrderService.WithExplicitPaths(@"C:\Game\Skyrim Special Edition\Data", @"C:\Mods", @"C:\Profile", 0, Store());
@@ -44,7 +44,7 @@ public sealed class CompileGameDirHintTests : IDisposable
     }
 
     // Probe A: "CompilerGameDirHints includes the load-order game dir as the first hint, and never throws".
-    [Fact]
+    [WindowsFact]
     public void TheHintsLeadWithTheLoadOrderGameDir()
     {
         var svc = LoadOrderService.WithExplicitPaths(@"C:\Game\Skyrim Special Edition\Data", @"C:\Mods", @"C:\Profile", 0, Store());

@@ -13,6 +13,9 @@ public sealed partial class LoadOrderService : IDisposable, IAssetHost, ICheckHo
     string _modsDir;
     string _profileDir;
     string _profileName;                           // the active profile (instance mode: from selected_profile)
+    string? _iniFolder;                            // Amethyst: the profile's own INI folder when it runs the game on them; null otherwise
+    bool _overwriteOutput;                         // Amethyst: new patches land in the overwrite folder, which it indexes, not in a new mod folder it would not
+    string? _rootFolderDir;                        // Amethyst: the Root_Folder deployed to the game root; null otherwise
     string _overwriteDir;                          // MO2's overwrite layer (instance mode: derived; explicit mode: configured, "" for none)
     bool _configured;                              // false ⇒ tools return the trained prompt instead of resolving
     InstanceText? _text;                           // the order build's game language and string-table winners; bound to each call that reads this order
@@ -111,9 +114,18 @@ public sealed partial class LoadOrderService : IDisposable, IAssetHost, ICheckHo
     /// <summary>The order's game language and string-table winners, from the profile read the build just made; a language houseCARL cannot read throws here, before anything is published.</summary>
     InstanceText ReadInstanceText(Mo2Roots r, Mo2OrderResult order, out ArchiveDiscoveryResult discovery)
     {
-        var ini = GameIni.For(r.ProfileDir);
+        var ini = IniFor(r.ProfileDir, r.IniFolder);
         discovery = ArchiveDiscovery.Discover(order.Composition, ini, r.ModsDir, r.DataDir, r.OverwriteDir);
         return GameLanguage.Read(ini, order.Composition, discovery, r.ModsDir, r.DataDir, r.OverwriteDir, order.OrderedPaths);
+    }
+
+    static GameIni IniFor(string profileDir, string? iniFolder) => iniFolder is null ? GameIni.For(profileDir) : GameIni.Local(iniFolder);
+
+    /// <summary>Take the roots a manager layout adds beyond the five houseCARL always reads, and the prefix its game runs in. Caller holds <see cref="_gate"/>.</summary>
+    void ApplyInstanceExtras(Mo2InstancePaths p)
+    {
+        _iniFolder = p.IniFolder; _rootFolderDir = p.RootFolderDir; _overwriteOutput = p.Source == "Amethyst";
+        GamePrefix.Hint = p.PrefixDir ?? GamePrefix.FromSteamGameDir(p.GamePath);
     }
 
     /// <summary>The corpus rulebook (corpus.json), loaded from the absolute CorpusPath on first use; the write pre-flight and the read scan's quantifier check share it.</summary>
@@ -717,7 +729,7 @@ public sealed partial class LoadOrderService : IDisposable, IAssetHost, ICheckHo
     (Mo2Composition, ArchiveDiscoveryResult) ReadProfileLocked()
     {
         var comp = Mo2LoadOrder.ReadComposition(_profileDir);                       // EnabledMods (priority) — cheap text parse
-        return (comp, ArchiveDiscovery.Discover(comp, GameIni.For(_profileDir), _modsDir, _dataDir, _overwriteDir));
+        return (comp, ArchiveDiscovery.Discover(comp, IniFor(_profileDir, _iniFolder), _modsDir, _dataDir, _overwriteDir));
     }
 
     /// <summary>Every asset lane's warnings: the build's own, plus the kept-build sentence when a profile change could not be re-read. Caller holds <see cref="_gate"/>.</summary>
@@ -1084,9 +1096,10 @@ public sealed partial class LoadOrderService : IDisposable, IAssetHost, ICheckHo
                         || !PathEq(p.OverwriteDir, _overwriteDir);
         if (!switched) { _iniStamp = iniStamp; return false; }   // ini touched but nothing we resolve from changed
         // A new profile's order that is held or empty keeps the old roots, resolver and ini stamp, so the next call retries.
-        if (!ReResolve(new(ProfileDir: p.ProfileDir, DataDir: p.DataDir, ModsDir: p.ModsDir, OverwriteDir: p.OverwriteDir))) return true;
+        if (!ReResolve(new(ProfileDir: p.ProfileDir, DataDir: p.DataDir, ModsDir: p.ModsDir, OverwriteDir: p.OverwriteDir, IniFolder: p.IniFolder, RootFolderDir: p.RootFolderDir, OverwriteOutput: p.Source == "Amethyst"))) return true;
         _iniStamp = iniStamp;                                     // advance only once the new roots are published
         _profileDir = p.ProfileDir; _modsDir = p.ModsDir; _dataDir = p.DataDir; _profileName = p.ProfileName; _overwriteDir = p.OverwriteDir;
+        ApplyInstanceExtras(p);
         System.Threading.Interlocked.Increment(ref _gameRootsGen);   // the game roots moved → the runtime memo re-probes
         InvalidateClassParents();                                // the mods tree may have moved — drop the cached hierarchy with it
         return true;
@@ -1152,6 +1165,7 @@ public sealed partial class LoadOrderService : IDisposable, IAssetHost, ICheckHo
         var iniStamp = FileStamp.Of(Mo2Instance.IniPath(_instanceDir)); // stat BEFORE the read: an ini write during/after Resolve is caught next call
         var p = Mo2Instance.Resolve(_instanceDir);               // throws, naming the missing piece, if this is not a usable instance
         _profileDir = p.ProfileDir; _modsDir = p.ModsDir; _dataDir = p.DataDir; _profileName = p.ProfileName; _overwriteDir = p.OverwriteDir;
+        ApplyInstanceExtras(p);
         _iniStamp = iniStamp;
         InvalidateClassParents();                                // _modsDir just gained a value — a cache built before derivation is baseline-only
     }
@@ -1206,7 +1220,7 @@ public sealed partial class LoadOrderService : IDisposable, IAssetHost, ICheckHo
     OutputRoots ILoadOrderHost.ConfiguredRoots() => ConfiguredRoots();
 
     /// <summary>The four roots as they stand; caller holds <see cref="_gate"/>.</summary>
-    Mo2Roots RootsLocked() => new(ProfileDir: _profileDir, DataDir: _dataDir, ModsDir: _modsDir, OverwriteDir: _overwriteDir);
+    Mo2Roots RootsLocked() => new(ProfileDir: _profileDir, DataDir: _dataDir, ModsDir: _modsDir, OverwriteDir: _overwriteDir, IniFolder: _iniFolder, RootFolderDir: _rootFolderDir, OverwriteOutput: _overwriteOutput);
 
     static bool PathEq(string a, string b) =>
         string.Equals(a.TrimEnd('\\', '/'), b.TrimEnd('\\', '/'), StringComparison.OrdinalIgnoreCase);
@@ -1259,13 +1273,18 @@ public sealed partial class LoadOrderService : IDisposable, IAssetHost, ICheckHo
             {
                 try
                 {
-                    var exe = Path.Combine(dir, "SkyrimSE.exe");
+                    var exe = LooseListings.OnDisk(dir, "SkyrimSE.exe");
                     if (!File.Exists(exe)) continue;
-                    var fv = System.Diagnostics.FileVersionInfo.GetVersionInfo(exe);
-                    // FileVersion can carry vendor noise; the numeric parts are the truth. Prefer them when present.
-                    string? v = fv.FileMajorPart > 0 || fv.FileMinorPart > 0 || fv.FileBuildPart > 0 || fv.FilePrivatePart > 0
-                        ? $"{fv.FileMajorPart}.{fv.FileMinorPart}.{fv.FileBuildPart}.{fv.FilePrivatePart}"
-                        : string.IsNullOrWhiteSpace(fv.FileVersion) ? null : fv.FileVersion!.Trim();
+                    string? v;
+                    if (OperatingSystem.IsWindows())
+                    {
+                        var fv = System.Diagnostics.FileVersionInfo.GetVersionInfo(exe);
+                        // FileVersion can carry vendor noise; the numeric parts are the truth. Prefer them when present.
+                        v = fv.FileMajorPart > 0 || fv.FileMinorPart > 0 || fv.FileBuildPart > 0 || fv.FilePrivatePart > 0
+                            ? $"{fv.FileMajorPart}.{fv.FileMinorPart}.{fv.FileBuildPart}.{fv.FilePrivatePart}"
+                            : string.IsNullOrWhiteSpace(fv.FileVersion) ? null : fv.FileVersion!.Trim();
+                    }
+                    else v = PeFileVersion.Read(exe);
                     if (v is null) continue;
                     _runtimeExe = exe; _runtimeExeMtime = File.GetLastWriteTimeUtc(exe); _runtimeVersion = v;
                     return v;
@@ -1306,8 +1325,9 @@ public sealed partial class LoadOrderService : IDisposable, IAssetHost, ICheckHo
     }
 
     /// <summary>Point houseCARL at an MO2 instance folder: validate it, re-point the live service, and persist the choice. Nothing changes or persists on failure.</summary>
-    public (Mo2InstancePaths paths, bool persisted, string? persistError, string? persistNote) SetInstance(string instanceDir)
+    public (Mo2InstancePaths paths, bool persisted, string? persistError, string? persistNote) SetInstance(string instanceDir, string? profile = null)
     {
+        instanceDir = Mo2Instance.Locate(instanceDir, profile);
         // The ini baseline is statted BEFORE Resolve reads the instance, the same discipline as every other baseline here.
         var iniStamp = FileStamp.Of(Mo2Instance.IniPath(instanceDir.Trim()));
         var paths = Mo2Instance.Resolve(instanceDir);            // throws if not a usable MO2 instance — the tool renders the reason
@@ -1317,6 +1337,7 @@ public sealed partial class LoadOrderService : IDisposable, IAssetHost, ICheckHo
             _instanceDir = paths.InstanceDir;
             _dataDir = paths.DataDir; _modsDir = paths.ModsDir; _profileDir = paths.ProfileDir; _profileName = paths.ProfileName;
             _overwriteDir = paths.OverwriteDir;
+            ApplyInstanceExtras(paths);
             _iniStamp = iniStamp;
             _configured = true;
             _resolver?.Dispose(); _resolver = null;              // force a rebuild against the new instance on the next query

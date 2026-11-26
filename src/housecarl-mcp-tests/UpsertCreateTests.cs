@@ -141,7 +141,7 @@ public sealed class UpsertCreateTests : IDisposable
     }
 
     // LOCKED: a commit blocked by a foreign no-delete-share handle fails loud, old bytes intact, no temp residue
-    [Fact]
+    [WindowsFact]
     public void ABlockedCommitFailsLoudWithTheOldBytesIntact()
     {
         var path = FreshPatch(out _);

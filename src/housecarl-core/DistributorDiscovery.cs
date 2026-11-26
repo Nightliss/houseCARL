@@ -29,7 +29,7 @@ public static class DistributorDiscovery
         var files = new List<ConfigFile>();
         foreach (var folder in format.Folders)
         {
-            bool Reads(string rel) => folder.Reads(Path.GetFileName(rel));
+            bool Reads(string rel) => folder.Reads(DiskPath.FileName(rel));
             // A descending folder filters inside the walk, so a whole subtree is never materialized to keep a few
             // names; a top-level listing is one directory per root, so it is filtered after the walk has merged them.
             var listed = folder.Descends

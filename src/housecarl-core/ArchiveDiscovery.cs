@@ -91,7 +91,7 @@ public static class ArchiveDiscovery
         if (string.IsNullOrWhiteSpace(dir) || !Directory.Exists(dir)) return [];
         try
         {
-            return Directory.EnumerateFiles(dir, "*.bsa", new EnumerationOptions { IgnoreInaccessible = false })
+            return Directory.EnumerateFiles(dir, "*.bsa", DiskPath.IgnoreCase)
                 .Where(f => Path.GetExtension(f).Equals(".bsa", StringComparison.OrdinalIgnoreCase))
                 .Select(f => (Path.GetFileName(f), f)).ToList();
         }

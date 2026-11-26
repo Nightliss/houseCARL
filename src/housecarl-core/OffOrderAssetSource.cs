@@ -66,7 +66,7 @@ public static class OffOrderAssetSource
 
         // The same rule the build applies, ticked or not: a hidden loose copy is never read, only named.
         HiddenCopies? hidden = null;
-        var rule = skip.Hides(opened, linked: true);
+        var rule = skip.Hides(opened, linked: true, name);
         // dir is the enabled root's folder as resolve keys it (the same join of the mods folder and the name).
         Probe Look(string rel, out string? cause) => listings is null ? ProbeFile(LooseListings.OnDisk(dir, rel), out cause) : ProbeListed(listings, dir, rel, out cause);
         switch (Look(opened, out var looseCause))
@@ -153,7 +153,7 @@ public static class OffOrderAssetSource
         }
         else
         {
-            try { bsas = Directory.EnumerateFiles(dir, "*.bsa", SearchOption.TopDirectoryOnly).ToList(); }
+            try { bsas = Directory.EnumerateFiles(dir, "*.bsa", DiskPath.IgnoreCase).ToList(); }
             catch (Exception ex) { failed = ex; bsas = []; }
         }
         if (failed is DirectoryNotFoundException) return (Array.Empty<string>(), true, null);

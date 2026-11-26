@@ -1,3 +1,4 @@
+using HousecarlCore;
 using System.Text.Json;
 using Xunit;
 using YamlDotNet.Serialization;
@@ -29,7 +30,7 @@ public sealed class PluginValidateFrontmatterTests
     [MemberData(nameof(SkillFiles))]
     public void AShippedSkillFrontmatterParsesWithANameAndADescription(string relPath)
     {
-        var v = ValidateSkillFrontmatter(File.ReadAllText(Path.Combine(HarnessPaths.RepoRoot, relPath)));
+        var v = ValidateSkillFrontmatter(File.ReadAllText(DiskPath.Join(HarnessPaths.RepoRoot, relPath)));
         Assert.True(v.Count == 0, $"{relPath}: " + string.Join("; ", v));
     }
 

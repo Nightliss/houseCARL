@@ -48,8 +48,8 @@ public sealed class CompactVoiceCarryTests
         Assert.NotEqual(old.ID, ik.ID);
         var root = Path.GetDirectoryName(o.OutputPath)!;
         Assert.NotEqual(inst.ModDir, root);
-        Assert.True(CompactCarryInstance.Holds(Path.Combine(root, Voice(ik, "HcVoiceTopic", VoiceFile.Fuz)), Fuz));
-        Assert.True(CompactCarryInstance.Holds(Path.Combine(root, Voice(ik, "HcVoiceTopic", VoiceFile.Lip)), Lip));
+        Assert.True(CompactCarryInstance.Holds(DiskPath.Join(root, Voice(ik, "HcVoiceTopic", VoiceFile.Fuz)), Fuz));
+        Assert.True(CompactCarryInstance.Holds(DiskPath.Join(root, Voice(ik, "HcVoiceTopic", VoiceFile.Lip)), Lip));
         Assert.Equal(2, o.VoiceRename?.FilesScanned);
         Assert.Equal(2, o.VoiceRename?.FilesCarried);
         Assert.Equal(1, o.VoiceRename?.LinesCarried);
@@ -64,7 +64,7 @@ public sealed class CompactVoiceCarryTests
         var oldFuz = Voice(new FormKey(inst.Key, 0x811), "HcVoiceTopic", VoiceFile.Fuz);
         inst.Loose(oldFuz, Fuz);
         Assert.True(inst.Compact().Success);
-        Assert.True(CompactCarryInstance.Holds(Path.Combine(inst.ModDir, oldFuz), Fuz));
+        Assert.True(CompactCarryInstance.Holds(DiskPath.Join(inst.ModDir, oldFuz), Fuz));
     }
 
     // IN-PLACE: the voice is carried into the target's OWN folder at the new FormID; the old file stays as a harmless orphan
@@ -80,10 +80,10 @@ public sealed class CompactVoiceCarryTests
         Assert.True(o.InPlace);
         var ik = InfoKey(o.OutputPath, "HcVoiceTopic");
         Assert.NotEqual(0x821u, ik.ID);
-        Assert.True(CompactCarryInstance.Holds(Path.Combine(inst.ModDir, Voice(ik, "HcVoiceTopic", VoiceFile.Fuz)), Fuz));
+        Assert.True(CompactCarryInstance.Holds(DiskPath.Join(inst.ModDir, Voice(ik, "HcVoiceTopic", VoiceFile.Fuz)), Fuz));
         Assert.Equal(1, o.VoiceRename?.FilesCarried);
         Assert.Equal(1, o.VoiceRename?.LinesCarried);
-        Assert.True(File.Exists(Path.Combine(inst.ModDir, oldFuz)));
+        Assert.True(File.Exists(DiskPath.Join(inst.ModDir, oldFuz)));
     }
 
     // NEW-FILE, UNMOVED: a line already at its compacted id still gets its voice in the new mod folder, which starts empty
@@ -101,7 +101,7 @@ public sealed class CompactVoiceCarryTests
         Assert.Equal(0x801u, ik.ID);
         var root = Path.GetDirectoryName(o.OutputPath)!;
         Assert.NotEqual(inst.ModDir, root);
-        Assert.True(CompactCarryInstance.Holds(Path.Combine(root, Voice(ik, "HcVoiceTopic", VoiceFile.Fuz)), Fuz));
+        Assert.True(CompactCarryInstance.Holds(DiskPath.Join(root, Voice(ik, "HcVoiceTopic", VoiceFile.Fuz)), Fuz));
         Assert.Equal(1, o.VoiceRename?.FilesCarried);
     }
 
@@ -117,7 +117,7 @@ public sealed class CompactVoiceCarryTests
         Assert.True(o.Success, o.Error);
         Assert.Equal(0, o.RecordsMoved);
         Assert.Equal(0, o.VoiceRename?.FilesCarried ?? 0);
-        Assert.True(CompactCarryInstance.Holds(Path.Combine(inst.ModDir, fuz), Fuz));
+        Assert.True(CompactCarryInstance.Holds(DiskPath.Join(inst.ModDir, fuz), Fuz));
     }
 
     // MULTI-LINE: two INFOs with DISTINCT audio each keep their OWN .fuz across the renumber
@@ -136,9 +136,9 @@ public sealed class CompactVoiceCarryTests
         var o = inst.Compact(inPlace: true);
         Assert.True(o.Success, o.Error);
         Assert.True(CompactCarryInstance.Holds(
-            Path.Combine(inst.ModDir, Voice(InfoKey(o.OutputPath, "HcTopicA"), "HcTopicA", VoiceFile.Fuz)), fuzA));
+            DiskPath.Join(inst.ModDir, Voice(InfoKey(o.OutputPath, "HcTopicA"), "HcTopicA", VoiceFile.Fuz)), fuzA));
         Assert.True(CompactCarryInstance.Holds(
-            Path.Combine(inst.ModDir, Voice(InfoKey(o.OutputPath, "HcTopicB"), "HcTopicB", VoiceFile.Fuz)), fuzB));
+            DiskPath.Join(inst.ModDir, Voice(InfoKey(o.OutputPath, "HcTopicB"), "HcTopicB", VoiceFile.Fuz)), fuzB));
         Assert.Equal(2, o.VoiceRename?.FilesCarried);
         Assert.Equal(2, o.VoiceRename?.LinesCarried);
     }

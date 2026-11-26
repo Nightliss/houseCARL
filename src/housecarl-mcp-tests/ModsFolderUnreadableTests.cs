@@ -238,7 +238,7 @@ public sealed class ModsFolderUnreadableTests : IClassFixture<ModsUnreadableWorl
         Assert.DoesNotContain("NOT installed anywhere", text);
     }
 
-    [Fact]
+    [WindowsFact]
     public void AnAssetAnswerSaysTheUnopenedModFoldersArchivesWereNotScanned()
     {
         using var svc = _w.Partial();
@@ -248,7 +248,7 @@ public sealed class ModsFolderUnreadableTests : IClassFixture<ModsUnreadableWorl
         Assert.Contains(ModsUnreadableWorld.BrokenMod, text);
     }
 
-    [Fact]
+    [WindowsFact]
     public void AHiddenPluginInAnEnabledModIsNotInTheOrder()
     {
         var (profile, mods, data) = _w.HiddenPluginInstance();
@@ -434,9 +434,7 @@ public sealed class ModsUnreadableWorld : IDisposable
     static void Junction(string link, string target, bool keepTarget = false)
     {
         Directory.CreateDirectory(target);
-        using (var mk = System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo("cmd.exe", $"/c mklink /J \"{link}\" \"{target}\"")
-                   { UseShellExecute = false, CreateNoWindow = true, RedirectStandardOutput = true }))
-            mk!.WaitForExit();
+        DirLink.Make(link, target);
         if (!keepTarget) Directory.Delete(target);
         Assert.True(new DirectoryInfo(link).LinkTarget is not null, "the junction was not made");
     }

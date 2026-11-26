@@ -15,7 +15,7 @@ public sealed class AssetSelectTests : IClassFixture<AssetSelectWorld>
 
     static string[] Paths(AssetStatusData d) => d.Results.Select(r => r.RelPath).ToArray();
 
-    static string Leaf(string p) => Path.GetFileName(p);
+    static string Leaf(string p) => DiskPath.FileName(p);
 
     /// <summary>The #246 measure: one call per defining master over its facegeom folder answers for the whole set —
     /// the same files, the same winners, as spelling every path out. Forty path-list calls collapse to one.</summary>
@@ -514,6 +514,9 @@ public sealed class AssetSelectTests : IClassFixture<AssetSelectWorld>
         Assert.False(root.TryGetProperty("results", out _));
     }
 
+    // The writer indents with the OS newline, so these caps sit at different places in a CRLF document.
+    static int JsonAlarmCap => OperatingSystem.IsWindows() ? 1_100 : 1_200;
+
     /// <summary>Under ALARM pressure the census still fits its cap on both transports. The alarm blocks are the
     /// only cuttable thing above the counters, so if the counters, the axis note and the axis head are not charged
     /// before the alarms render, the alarms take that room and the response lands over the cap on a cut that would
@@ -525,10 +528,10 @@ public sealed class AssetSelectTests : IClassFixture<AssetSelectWorld>
             .Concat(Enumerable.Range(0, 40).Select(i => @"meshes\hcnothing" + i)).ToArray();
 
         var text = AssetTools.AssetStatus(_w.Svc, under: many, counts_only: true, max_chars: 1_200);
-        var json = AssetTools.AssetStatus(_w.Svc, under: many, counts_only: true, format: "json", max_chars: 1_100);
+        var json = AssetTools.AssetStatus(_w.Svc, under: many, counts_only: true, format: "json", max_chars: JsonAlarmCap);
 
         Assert.True(text.Length <= 1_200, $"the text census is {text.Length} chars on max_chars=1200");
-        Assert.True(json.Length <= 1_100, $"the json census is {json.Length} chars on max_chars=1100");
+        Assert.True(json.Length <= JsonAlarmCap, $"the json census is {json.Length} chars on max_chars={JsonAlarmCap}");
         // The counters and the alarm counts survive the pressure: what gives is the cuttable selector list.
         Assert.Contains("census: counted=5 present=5 absent=0 errors=0", text);
         Assert.Contains("[!] under (40):", text);
@@ -551,7 +554,7 @@ public sealed class AssetSelectTests : IClassFixture<AssetSelectWorld>
                         .GetProperty("winners_by_layer").GetProperty("rendered").GetInt32() >= 2);
 
         // A real cut: some rows in, the rest disclosed by the axis's own frame, and the document still inside the cap.
-        const int Cap = 1_075;
+        int Cap = OperatingSystem.IsWindows() ? 1_075 : 1_040;
         var text = Census(Cap);
         var root = System.Text.Json.JsonDocument.Parse(text).RootElement;
         Assert.Equal(3, root.GetProperty("winners_by_layer").GetProperty("distinct").GetInt32());
@@ -597,7 +600,7 @@ public sealed class AssetSelectTests : IClassFixture<AssetSelectWorld>
 
     /// <summary>counts_only= and to_file= ask for opposite dispositions of the same result, so the pair is refused
     /// by name — the same refusal the records lanes make.</summary>
-    [Fact]
+    [WindowsFact]
     public void CountsOnlyBesideToFileIsRefusedByName()
     {
         var text = AssetTools.AssetStatus(_w.Svc, under: new[] { AssetSelectWorld.FaceGeomDir },

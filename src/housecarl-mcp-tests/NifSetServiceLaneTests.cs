@@ -22,7 +22,7 @@ public sealed class NifSetServiceLaneTests
         using var w = new NifSetInstance(Mesh);
         var res = w.Svc.NifSet(MeshRel, Flags(), null, "FaceFix", null, inPlace: false, acknowledge: false);
         Assert.Null(res.Error);
-        var placed = Path.Combine(res.OutputModFolder!, MeshRel);
+        var placed = DiskPath.Join(res.OutputModFolder!, MeshRel);
         Assert.Equal(0x800000Eu, ShapeOf(File.ReadAllBytes(placed), "GuardShape")!.Flags);
     }
 
@@ -133,7 +133,7 @@ public sealed class NifSetServiceLaneTests
     }
 
     // probe: "a held target makes the in-place overwrite refuse with the mesh byte-intact"
-    [Fact]
+    [WindowsFact]
     public void AHeldTargetRefusesTheOverwriteWithTheMeshIntact()
     {
         using var w = new NifSetInstance(Mesh);
@@ -144,7 +144,7 @@ public sealed class NifSetServiceLaneTests
     }
 
     // probe: "the refused in-place edit records NO consent"
-    [Fact]
+    [WindowsFact]
     public void ARefusedInPlaceEditRecordsNoConsent()
     {
         using var w = new NifSetInstance(Mesh);
@@ -152,7 +152,7 @@ public sealed class NifSetServiceLaneTests
     }
 
     // probe: "…so the NEXT call still meets the first-touch prompt rather than overwriting unprompted"
-    [Fact]
+    [WindowsFact]
     public void TheCallAfterARefusedInPlaceEditStillPrompts()
     {
         using var w = new NifSetInstance(Mesh);

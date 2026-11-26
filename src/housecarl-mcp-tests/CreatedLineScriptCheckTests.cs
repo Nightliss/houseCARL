@@ -31,7 +31,7 @@ public sealed class CreatedLineScriptCheckTests : IDisposable
         Directory.CreateDirectory(dir);
         foreach (var rel in files)
         {
-            var full = Path.Combine(dir, rel);
+            var full = DiskPath.Join(dir, rel);
             Directory.CreateDirectory(Path.GetDirectoryName(full)!);
             File.WriteAllBytes(full, new byte[] { 0, 1, 2 });
         }

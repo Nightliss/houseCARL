@@ -66,7 +66,7 @@ public static class SkyPatcherDiscovery
 
         foreach (var rel in view.EnumerateUnder(f.Root))
         {
-            var name = Path.GetFileName(rel);
+            var name = DiskPath.FileName(rel);
             if (!HasIniName(name, f)) continue;
 
             // Subfolder = the first component under the root; deeper nesting is organisation only.
@@ -165,7 +165,7 @@ public static class SkyPatcherDiscovery
     public static string? GatePluginOf(string relPath, SkyPatcherFormat? format = null)
     {
         var f = format ?? Format;
-        var stem = Stem(Path.GetFileName(relPath), f);
+        var stem = Stem(DiskPath.FileName(relPath), f);
         return f.GateExtensions.Any(e => stem.EndsWith(e, StringComparison.OrdinalIgnoreCase)) ? stem : null;
     }
 
@@ -216,11 +216,11 @@ public static class SkyPatcherDiscovery
         var f = format ?? Format;
         var p = AssetResolver.Normalize(relPath);
         return p.Equals(f.SwitchesFile, StringComparison.OrdinalIgnoreCase)
-            || (p.StartsWith(f.Root + "\\", StringComparison.OrdinalIgnoreCase) && HasIniName(Path.GetFileName(p), f));
+            || (p.StartsWith(f.Root + "\\", StringComparison.OrdinalIgnoreCase) && HasIniName(DiskPath.FileName(p), f));
     }
 
     /// <summary>The switches file's name as the answers spell it ('SkyPatcher.ini').</summary>
-    public static string SwitchesName(SkyPatcherFormat? format = null) => Path.GetFileName((format ?? Format).SwitchesFile);
+    public static string SwitchesName(SkyPatcherFormat? format = null) => DiskPath.FileName((format ?? Format).SwitchesFile);
 
     /// <summary>The clause naming why a patcher that does not run is off: its switch at 0, no switch in the file, or no loose file.</summary>
     public static string SwitchOffReason(Switches switches, string subfolder, SkyPatcherFormat? format = null)

@@ -51,7 +51,7 @@ sealed class FaceGenPoleWorld : IDisposable
     {
         foreach (var slot in new[] { FaceGenSlot.Mesh, FaceGenSlot.Tint })
         {
-            var p = Path.Combine(ModDir(modFolder), FaceGenPath.For(npc, slot));
+            var p = DiskPath.Join(ModDir(modFolder), FaceGenPath.For(npc, slot));
             Directory.CreateDirectory(Path.GetDirectoryName(p)!);
             File.WriteAllText(p, "x");
         }

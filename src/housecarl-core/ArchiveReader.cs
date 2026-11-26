@@ -40,7 +40,7 @@ internal sealed class ArchiveReader(Action? opened = null)
     {
         var held = Open(archivePath);
         var want = AssetResolver.Normalize(entryPath);
-        var dir = Path.GetDirectoryName(want) ?? "";
+        var dir = DiskPath.DirectoryName(want);
         Dictionary<string, IArchiveFile> names;
         lock (held)
         {

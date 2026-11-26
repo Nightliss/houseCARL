@@ -184,10 +184,10 @@ public sealed class AssetVisibilityTests : IDisposable
         var svc = _p.Open();
         Assert.True(Exists(svc, Shown));
 
-        File.Move(Path.Combine(_mod, Shown), Path.Combine(_mod, Shown + ".mohidden"));
+        File.Move(DiskPath.Join(_mod, Shown), DiskPath.Join(_mod, Shown + ".mohidden"));
         Assert.False(Exists(svc, Shown));
 
-        File.Move(Path.Combine(_mod, Shown + ".mohidden"), Path.Combine(_mod, Shown));
+        File.Move(DiskPath.Join(_mod, Shown + ".mohidden"), DiskPath.Join(_mod, Shown));
         Assert.True(Exists(svc, Shown));
     }
 

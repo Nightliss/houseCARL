@@ -152,7 +152,7 @@ public sealed class DistributorLayerHeldTests : IDisposable
     }
 
     // A file that cannot be read: its read-error row, on each format.
-    [Fact]
+    [WindowsFact]
     public void AFileThatCannotBeReadIsHeld()
     {
         Layer(Both);
@@ -162,7 +162,7 @@ public sealed class DistributorLayerHeldTests : IDisposable
     }
 
     // The EditorID lookup's unreadable-plugin notes: SPID's part says them, KID's skips what SPID's holds; KID alone says them.
-    [Fact]
+    [WindowsFact]
     public void TheUnreadablePluginNotesAreHeld()
     {
         Layer(Both);

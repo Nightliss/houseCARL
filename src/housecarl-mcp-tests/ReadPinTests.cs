@@ -194,7 +194,7 @@ public sealed class ReadPinTests : IDisposable
         Assert.Equal(_dataB, ((ILoadOrderHost)_svc).CaptureRoots().DataDir);
     }
 
-    [Fact]
+    [WindowsFact]
     public void ASwitchToAProfileHeldOpenKeepsTheOldRoots()
     {
         _svc.CaptureView();                                                     // warms the index on the Default profile

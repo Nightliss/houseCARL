@@ -4,14 +4,39 @@ namespace HousecarlCore;
 
 /// <summary>The four load-order roots derived from an MO2 instance folder, plus the active profile name and game root; feed them straight to <see cref="Mo2LoadOrder.Build"/>.</summary>
 public sealed record Mo2InstancePaths(
-    string InstanceDir, string ProfileName, string ProfileDir, string ModsDir, string DataDir, string GamePath, string OverwriteDir);
+    string InstanceDir, string ProfileName, string ProfileDir, string ModsDir, string DataDir, string GamePath, string OverwriteDir)
+{
+    /// <summary>Amethyst's Root_Folder: files it deploys to the game root, beside the mods folder.</summary>
+    public string? RootFolderDir { get; init; }
+
+    /// <summary>The folder holding the INIs the game runs on when the manager keeps them per profile, else null (the prefix's My Games).</summary>
+    public string? IniFolder { get; init; }
+
+    /// <summary>The Proton prefix (<c>pfx</c>) the manager runs the game in, when it names one.</summary>
+    public string? PrefixDir { get; init; }
+
+    /// <summary>Which manager's layout this is.</summary>
+    public string Source { get; init; } = "MO2";
+}
 
 public static class Mo2Instance
 {
     public const string IniFileName = "ModOrganizer.ini";
 
+    /// <summary>The folder to resolve for what the caller pointed at: an MO2 instance as given, else an Amethyst profile folder, found from the profile folder itself or from a profile root and a profile name (the one Amethyst last had active when none is named); throws naming why when it is meant as Amethyst and is not usable.</summary>
+    public static string Locate(string path, string? profile)
+    {
+        var folder = (path ?? "").Trim().TrimEnd('\\', '/');
+        if (folder.Length == 0 || File.Exists(IniPath(folder))) return path ?? "";
+        if (AmethystInstance.Locate(folder, profile, out var problem) is { } profileDir) return profileDir;
+        if (AmethystInstance.IsProfileDir(folder) || Directory.Exists(LooseListings.OnDisk(folder, "profiles")) || !string.IsNullOrWhiteSpace(profile))
+            throw new InvalidOperationException($"'{folder}' is not a usable Amethyst profile — {problem}.");
+        return path!;
+    }
+
     /// <summary>The ModOrganizer.ini path for an instance folder (the file the freshness check stats for a profile switch).</summary>
-    public static string IniPath(string instanceDir) => Path.Combine(instanceDir, IniFileName);
+    public static string IniPath(string instanceDir) =>
+        AmethystInstance.IsProfileDir(instanceDir) ? LooseListings.OnDisk(instanceDir, AmethystInstance.StateFileName) : Path.Combine(instanceDir, IniFileName);
 
     /// <summary>Derive the load-order roots from an instance folder, or THROW naming what is missing; use <see cref="Validate"/> for the problems without an exception.</summary>
     public static Mo2InstancePaths Resolve(string instanceDir)
@@ -42,6 +67,7 @@ public static class Mo2Instance
     /// <summary>Just the active profile name, cheaply — what the freshness check reads to learn whether the user switched profiles; null if the file or key is absent.</summary>
     public static string? ReadSelectedProfile(string instanceDir)
     {
+        if (AmethystInstance.IsProfileDir(instanceDir)) return Path.GetFileName(instanceDir.TrimEnd('\\', '/'));
         var ini = IniPath(instanceDir);
         if (!File.Exists(ini)) return null;
         string[] lines;
@@ -55,6 +81,7 @@ public static class Mo2Instance
     /// a readable list keeps the default with a warning naming the key; a missing or unreadable ini is all defaults.</summary>
     public static (Mo2SkipRules Rules, IReadOnlyList<string> Warnings) ReadSkipRules(string instanceDir)
     {
+        if (AmethystInstance.IsProfileDir(instanceDir)) return (AmethystInstance.ReadSkipRules(instanceDir), Array.Empty<string>());
         string[] lines;
         try { lines = File.ReadAllLines(IniPath(instanceDir)); }
         catch { return (Mo2SkipRules.Default, Array.Empty<string>()); }
@@ -80,11 +107,12 @@ public static class Mo2Instance
         if (string.IsNullOrWhiteSpace(instanceDir)) { problems?.Add("no path was given"); return null; }
         instanceDir = instanceDir.Trim().TrimEnd('\\', '/');
         if (!Directory.Exists(instanceDir)) { problems?.Add($"the folder does not exist: '{instanceDir}'"); return null; }
+        if (AmethystInstance.IsProfileDir(instanceDir)) return AmethystInstance.Derive(instanceDir, problems);
 
         var ini = IniPath(instanceDir);
         if (!File.Exists(ini))
         {
-            problems?.Add($"no {IniFileName} here — point at the MO2 instance folder (for a Wabbajack/portable list, the list's install folder)");
+            problems?.Add($"no {IniFileName} here — point at the MO2 instance folder (for a Wabbajack/portable list, the list's install folder), or at an Amethyst profile folder");
             return null;
         }
 
@@ -115,7 +143,7 @@ public static class Mo2Instance
             problems?.Add($"the active profile's folder is missing: '{profileDir}' (the profiles folder is {profiles!.Value.From})");
         else if (profileDir.Length > 0 && !File.Exists(Path.Combine(profileDir, "loadorder.txt")))
             problems?.Add($"profile '{profile}' has no loadorder.txt yet (open it in MO2 once so it writes its profile files)");
-        if (mods is not null && !Directory.Exists(modsDir))
+        if (mods is not null && !DiskPath.DirectoryOrDanglingLink(modsDir))
             problems?.Add($"the mods folder is missing: '{modsDir}' ({mods.Value.From}; MO2 creates it when it next starts)");
         if (dataDir.Length > 0 && !Directory.Exists(dataDir))
             problems?.Add($"the game Data folder is missing: '{dataDir}' (from gamePath '{gamePath}')");
@@ -124,7 +152,7 @@ public static class Mo2Instance
         bool ok = !string.IsNullOrWhiteSpace(profile) && !string.IsNullOrWhiteSpace(gamePath)
                   && mods is not null && profiles is not null && overwrite is not null
                   && Directory.Exists(profileDir) && File.Exists(Path.Combine(profileDir, "loadorder.txt"))
-                  && Directory.Exists(modsDir) && Directory.Exists(dataDir);
+                  && DiskPath.DirectoryOrDanglingLink(modsDir) && Directory.Exists(dataDir);
         if (!ok) return null;
 
         // A missing overwrite does not gate validity, a refused one does; see docs/architecture/mo2-instance.md.

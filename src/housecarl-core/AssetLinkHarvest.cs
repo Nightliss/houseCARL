@@ -32,7 +32,7 @@ public static class AssetLinkHarvest
         if (node is IAssetLinkGetter asset)
         {
             string? rel = null;
-            try { rel = asset.DataRelativePath.Path; } catch { /* an unset link — nothing to harvest */ }
+            try { rel = DiskPath.Logical(asset.DataRelativePath.Path); } catch { /* an unset link — nothing to harvest */ }
             if (!string.IsNullOrWhiteSpace(rel) && seen.Add(rel)) paths.Add(rel);
             return;
         }

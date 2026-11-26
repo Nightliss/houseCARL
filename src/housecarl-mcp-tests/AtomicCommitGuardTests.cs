@@ -66,7 +66,7 @@ public sealed class AtomicCommitGuardTests : IDisposable
     // Probe B: "destination creation time preserved - File.Replace, not File.Move(overwrite)". On a host whose file
     // system tunneling keeps the creation time through File.Move too, the two cannot be told apart; the control
     // detects that and the test stops there, as the probe did.
-    [Fact]
+    [WindowsFact]
     public void AnOverwriteKeepsTheTargetsCreationTime()
     {
         var ctlStaged = At("ctl.tmp");
@@ -106,7 +106,7 @@ public sealed class AtomicCommitGuardTests : IDisposable
     }
 
     // Probe C2: "a mid-swap failure on a locked target THROWS" and "prior target survives the failed mid-swap".
-    [Fact]
+    [WindowsFact]
     public void AHeldTargetThrowsAndThePriorFileSurvives()
     {
         var staged = At("c2.tmp");

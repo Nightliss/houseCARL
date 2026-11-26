@@ -23,7 +23,7 @@ internal sealed partial class RecordWrites
             var view = _host.Resolver.Capture();
             var snapshot = _host.ConfiguredRoots();                       // before the allocation lock, which never wraps an index-lock hold
             var roots = snapshot.Roots;
-            if (!Directory.Exists(roots.ModsDir))
+            if (!roots.OverwriteOutput && !Directory.Exists(roots.ModsDir))
                 return WritePatchBuilder.CreatePluginOutcome.Fail($"cannot write: ModsDir '{roots.ModsDir}' does not exist. Check HouseCarl:ModsDir.");
 
             // The basename is load-bearing for a trigger, so a collision is never auto-suffixed — refuse instead.
@@ -32,16 +32,18 @@ internal sealed partial class RecordWrites
                 if (view.ContainsPlugin(stem + ext))
                     return WritePatchBuilder.CreatePluginOutcome.Fail(
                         $"a plugin named '{stem + ext}' is already active in your load order — a header-only trigger needs a UNIQUE basename (a second one would shadow it, MO2 picking the winner by mod order). Choose a different name.");
-            var folder = Path.Combine(roots.ModsDir, OutputLocations.ModFolderName(stem));
+            var folder = OutputLocations.PatchFolderFor(roots, stem);
             var plugin = stem + ".esp";
             var active = OutputLocations.ActivePluginBasenames(roots, snapshot.BuiltPluginNames);   // before the lock: may build the order
             lock (_output.FolderAllocationGate)                          // the same allocation lock as the other fresh-folder sites
             {
                 // (b) a houseCARL mod folder of this exact name already exists — don't overwrite (could clobber a real patch
                 //     sharing the name) and don't auto-rename (would break the basename trigger): refuse and point at it.
-                if (Directory.Exists(folder))
+                if (roots.OverwriteOutput ? OutputLocations.PluginExts.Any(ext => File.Exists(Path.Combine(folder, stem + ext))) : Directory.Exists(folder))
                     return WritePatchBuilder.CreatePluginOutcome.Fail(
-                        $"a houseCARL output folder '{OutputLocations.ModFolderName(stem)}' already exists — houseCARL won't auto-rename a header-only plugin (its exact basename is what makes the trigger resolve). Remove that folder in MO2, or choose a different name.");
+                        roots.OverwriteOutput
+                        ? $"a plugin named '{stem}' already sits in the overwrite folder — houseCARL won't auto-rename a header-only plugin (its exact basename is what makes the trigger resolve). Remove it, or choose a different name."
+                        : $"a houseCARL output folder '{OutputLocations.ModFolderName(stem)}' already exists — houseCARL won't auto-rename a header-only plugin (its exact basename is what makes the trigger resolve). Remove that folder in MO2, or choose a different name.");
                 // (c) a plugin of this BASENAME sits somewhere the order is NOT loading — the shadow the fresh patch lanes take (#561).
                 if (active.Count > 0 && OutputLocations.ReadCompositionForShadow(roots) is { } comp)
                     foreach (var ext in OutputLocations.PluginExts)       // .esp / .esm / .esl — the basename is what binds
@@ -51,12 +53,12 @@ internal sealed partial class RecordWrites
                                                         "a header-only trigger needs a UNIQUE basename"));
 
                 Directory.CreateDirectory(folder);
-                OutputLocations.WriteOwnerMeta(folder, plugin);
+                OutputLocations.MarkOwned(roots, folder, plugin);
             }
             var outPath = Path.Combine(folder, plugin);
 
             var outcome = WritePatchBuilder.CreatePlugin(outPath, esl, author, description);
-            if (!outcome.Success) RemoveFolderCreatedThisCall(outPath);   // a refused create leaves no orphan folder
+            if (!outcome.Success && !roots.OverwriteOutput) RemoveFolderCreatedThisCall(outPath);   // a refused create leaves no orphan folder
             return outcome;
         }
     }

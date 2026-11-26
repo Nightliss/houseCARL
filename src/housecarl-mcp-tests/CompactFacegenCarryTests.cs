@@ -42,8 +42,8 @@ public sealed class CompactFacegenCarryTests
         Assert.NotEqual(0xA10u, nk.ID);
         var root = Path.GetDirectoryName(o.OutputPath)!;
         Assert.NotEqual(inst.ModDir, root);
-        Assert.True(CompactCarryInstance.Holds(Path.Combine(root, FaceGenPath.For(nk, FaceGenSlot.Mesh)), Mesh));
-        Assert.True(CompactCarryInstance.Holds(Path.Combine(root, FaceGenPath.For(nk, FaceGenSlot.Tint)), Tint));
+        Assert.True(CompactCarryInstance.Holds(DiskPath.Join(root, FaceGenPath.For(nk, FaceGenSlot.Mesh)), Mesh));
+        Assert.True(CompactCarryInstance.Holds(DiskPath.Join(root, FaceGenPath.For(nk, FaceGenSlot.Tint)), Tint));
         Assert.Equal(1, o.AssetRename?.NpcCount);
         Assert.Equal(1, o.AssetRename?.FacegenNpcsCarried);
         Assert.Equal(2, o.AssetRename?.FacegenFilesCarried);
@@ -57,7 +57,7 @@ public sealed class CompactFacegenCarryTests
         using var inst = OneFacedNpc("FaceMod", 0xA10, "HcFaceNpc");
         Assert.True(inst.Compact().Success);
         Assert.True(CompactCarryInstance.Holds(
-            Path.Combine(inst.ModDir, FaceGenPath.For(new FormKey(inst.Key, 0xA10), FaceGenSlot.Mesh)), Mesh));
+            DiskPath.Join(inst.ModDir, FaceGenPath.For(new FormKey(inst.Key, 0xA10), FaceGenSlot.Mesh)), Mesh));
     }
 
     // IN-PLACE: facegen carried into the target's OWN folder at the new FormID; the old file stays as a harmless orphan
@@ -70,10 +70,10 @@ public sealed class CompactFacegenCarryTests
         Assert.True(o.InPlace);
         var nk = NpcKey(o.OutputPath, "HcIpNpc");
         Assert.NotEqual(0xB20u, nk.ID);
-        Assert.True(CompactCarryInstance.Holds(Path.Combine(inst.ModDir, FaceGenPath.For(nk, FaceGenSlot.Mesh)), Mesh));
+        Assert.True(CompactCarryInstance.Holds(DiskPath.Join(inst.ModDir, FaceGenPath.For(nk, FaceGenSlot.Mesh)), Mesh));
         Assert.Equal(2, o.AssetRename?.FacegenFilesCarried);
         Assert.Equal(1, o.AssetRename?.FacegenNpcsCarried);
-        Assert.True(File.Exists(Path.Combine(inst.ModDir, FaceGenPath.For(new FormKey(inst.Key, 0xB20), FaceGenSlot.Mesh))));
+        Assert.True(File.Exists(DiskPath.Join(inst.ModDir, FaceGenPath.For(new FormKey(inst.Key, 0xB20), FaceGenSlot.Mesh))));
     }
 
     // NEW-FILE, UNMOVED: an NPC already at its compacted id still gets its face in the new mod folder, which starts empty
@@ -88,8 +88,8 @@ public sealed class CompactFacegenCarryTests
         Assert.Equal(0x800u, nk.ID);
         var root = Path.GetDirectoryName(o.OutputPath)!;
         Assert.NotEqual(inst.ModDir, root);
-        Assert.True(CompactCarryInstance.Holds(Path.Combine(root, FaceGenPath.For(nk, FaceGenSlot.Mesh)), Mesh));
-        Assert.True(CompactCarryInstance.Holds(Path.Combine(root, FaceGenPath.For(nk, FaceGenSlot.Tint)), Tint));
+        Assert.True(CompactCarryInstance.Holds(DiskPath.Join(root, FaceGenPath.For(nk, FaceGenSlot.Mesh)), Mesh));
+        Assert.True(CompactCarryInstance.Holds(DiskPath.Join(root, FaceGenPath.For(nk, FaceGenSlot.Tint)), Tint));
         Assert.Equal(2, o.AssetRename?.FacegenFilesCarried);
         var text = HousecarlMcp.WriteTools.RenderCompact(o);
         Assert.Contains("facegen: copied 2 files for 1 NPC into the new mod folder", text);
@@ -106,7 +106,7 @@ public sealed class CompactFacegenCarryTests
         Assert.Equal(0, o.RecordsMoved);
         Assert.Equal(0, o.AssetRename?.FacegenFilesCarried ?? 0);
         Assert.True(CompactCarryInstance.Holds(
-            Path.Combine(inst.ModDir, FaceGenPath.For(new FormKey(inst.Key, 0x800), FaceGenSlot.Mesh)), Mesh));
+            DiskPath.Join(inst.ModDir, FaceGenPath.For(new FormKey(inst.Key, 0x800), FaceGenSlot.Mesh)), Mesh));
     }
 
     // IN-PLACE ALIASING: P (old 0x900, enumerated first) renumbers to 0x800, which is Q's OLD id; each keeps its OWN face
@@ -133,8 +133,8 @@ public sealed class CompactFacegenCarryTests
         var qNew = NpcKey(o.OutputPath, "NpcQ");
         Assert.Equal(qOld, pNew);   // the overlap the test exists for: P's new id is Q's old one
         var root = Path.GetDirectoryName(o.OutputPath)!;
-        Assert.True(CompactCarryInstance.Holds(Path.Combine(root, FaceGenPath.For(pNew, FaceGenSlot.Mesh)), meshP));
-        Assert.True(CompactCarryInstance.Holds(Path.Combine(root, FaceGenPath.For(qNew, FaceGenSlot.Mesh)), meshQ));
+        Assert.True(CompactCarryInstance.Holds(DiskPath.Join(root, FaceGenPath.For(pNew, FaceGenSlot.Mesh)), meshP));
+        Assert.True(CompactCarryInstance.Holds(DiskPath.Join(root, FaceGenPath.For(qNew, FaceGenSlot.Mesh)), meshQ));
     }
 
     // NO-FACEGEN: an NPC with no facegen carries nothing and is NOT a failure

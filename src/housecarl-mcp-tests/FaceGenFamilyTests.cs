@@ -87,7 +87,7 @@ public sealed class FaceGenFamilyTests : IClassFixture<FaceGenClassFixture>
         Assert.Contains("1 on a race with no FaceGenHead flag", text, StringComparison.Ordinal);
     }
 
-    [Fact]
+    [WindowsFact]
     public void ThePlayerAndAPresetAreNeverBakedCountedAndListedOnlyByName()
     {
         var text = Sweep("facegen");
@@ -324,7 +324,7 @@ public sealed class FaceGenFamilyTests : IClassFixture<FaceGenClassFixture>
         Assert.False(File.Exists(Path.Combine(_w.Root, "never.jsonl")));
     }
 
-    [Fact]
+    [WindowsFact]
     public void AModFolderThatWillNotListIsNamedAndItsPairCountedApartFromOneThatShipsNoPlugin()
     {
         Assert.True(_w.UnlistedStaged, "the listing deny on " + FaceGenWorld.UnlistedMod + " did not bite on this host");
@@ -343,7 +343,7 @@ public sealed class FaceGenFamilyTests : IClassFixture<FaceGenClassFixture>
                         e => e.GetString()!.StartsWith(FaceGenWorld.UnlistedMod + ":", StringComparison.Ordinal));
     }
 
-    [Fact]
+    [WindowsFact]
     public void AToFileSweepNamesTheUnlistedFolderAndTheUntestedCount()
     {
         Assert.True(_w.UnlistedStaged, "the listing deny on " + FaceGenWorld.UnlistedMod + " did not bite on this host");

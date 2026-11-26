@@ -14,6 +14,21 @@ static class HarnessPaths
     /// <summary>The target framework folder — read off the same path; the server is built for the same one.</summary>
     public static string TargetFramework => BuildFolder.TargetFramework;
 
+    /// <summary>How to start the built server: the .exe on Windows, the same build's dll under <c>dotnet</c> elsewhere.</summary>
+    public static System.Diagnostics.ProcessStartInfo ServerStart()
+    {
+        var bin = Path.Combine(RepoRoot, "src", "housecarl-mcp", "bin", Configuration, TargetFramework);
+        var exe = Path.Combine(bin, "housecarl-mcp.exe");
+        var dll = Path.Combine(bin, "housecarl-mcp.dll");
+        if (OperatingSystem.IsWindows() ? !File.Exists(exe) : !File.Exists(dll))
+            throw new InvalidOperationException(
+                $"The server is not built at '{bin}'. Build the solution in {Configuration} first — these tests " +
+                "drive the real server and cannot substitute anything else for it.");
+        return OperatingSystem.IsWindows()
+            ? new System.Diagnostics.ProcessStartInfo(exe)
+            : new System.Diagnostics.ProcessStartInfo("dotnet", [dll]);
+    }
+
     static readonly (string Configuration, string TargetFramework) BuildFolder = FindBuildFolder();
 
     static string FindRepoRoot()

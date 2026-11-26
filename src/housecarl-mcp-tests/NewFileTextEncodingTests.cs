@@ -269,7 +269,7 @@ public sealed class NewFileTextEncodingTests : IDisposable
     }
 
     /// <summary>The same sentence reaches the merge tool's reply: what failed and what to try, ending in a period.</summary>
-    [Fact]
+    [WindowsFact]
     public void AMergeThatCannotWriteSaysWhatToTryThroughTheTool()
     {
         var svc = Open("ENGLISH");

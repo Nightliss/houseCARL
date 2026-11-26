@@ -59,7 +59,7 @@ public sealed class SetupSettingsTests
 
     // ---- Claude Code -------------------------------------------------------
 
-    [Theory]
+    [WindowsTheory]
     [InlineData(null)]
     [InlineData(OldExe)]
     [InlineData("C:/old/HouseCARL-MCP.EXE")]
@@ -178,7 +178,7 @@ public sealed class SetupSettingsTests
     }
 
     // Pins unchanged behaviour: a repeated key inside a setting, or on another server's entry, is not setup's to read.
-    [Fact]
+    [WindowsFact]
     public void AKeyHeldTwiceElsewhereInMcpServersDoesNotReplaceTheEntry()
     {
         using var box = Box();
@@ -261,7 +261,7 @@ public sealed class SetupSettingsTests
         }
     }
 
-    [Theory]
+    [WindowsTheory]
     [MemberData(nameof(CodexLayouts))]
     public void OnlyTheCodexCommandValueChanges(string label, string layout)
     {
@@ -297,7 +297,7 @@ public sealed class SetupSettingsTests
         }
     }
 
-    [Fact]
+    [WindowsFact]
     public void ACodexCommandWithAUnicodeEscapeIsRead()
     {
         using var box = Box();

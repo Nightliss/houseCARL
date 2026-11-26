@@ -102,11 +102,17 @@ internal static class WriteSentences
         _ => $"could not fully read {p.Plugin}: {p.Reason}",
     };
 
+    /// <summary>Under Amethyst the output folder is the profile's overwrite, which Amethyst indexes itself; no enabling step exists there.</summary>
+    internal static string EnableIn(string modFolder, string mo2Sentence) =>
+        modFolder.Equals("overwrite", StringComparison.OrdinalIgnoreCase)
+            ? "Amethyst registers a new plugin from its overwrite folder on the next refresh or deploy; check it at the end of the load order"
+            : mo2Sentence;
+
     internal static string NewOrExtendedArtifact(bool extended, string file, long bytes, string modFolder) =>
         (extended ? $"extended {file} (existing patch grown; {bytes} bytes)\n"
                   : $"wrote {file} (new patch; {bytes} bytes)\n")
       + (extended ? $"mod folder: {modFolder}\n"
-                  : $"mod folder: {modFolder}  — enable it in MO2 to use the patch; MO2 adds a newly activated plugin at the END of the load order, so it overrides what is already there\n");
+                  : $"mod folder: {modFolder}  — {EnableIn(modFolder, "enable it in MO2 to use the patch; MO2 adds a newly activated plugin at the END of the load order, so it overrides what is already there")}\n");
 
     internal static string Masters(IReadOnlyList<string> masters) =>
         $"masters: {(masters.Count == 0 ? "(none)" : string.Join(", ", masters))}\n";

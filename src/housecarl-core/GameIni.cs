@@ -16,29 +16,30 @@ public sealed class GameIni
 
     GameIni(string folder, bool profileLocal) { Folder = folder; ProfileLocal = profileLocal; }
 
+    /// <summary>The INIs in <paramref name="folder"/>, which the manager runs the game on (a profile's own INI folder).</summary>
+    public static GameIni Local(string folder) => new(folder, true);
+
     /// <summary>The INIs for <paramref name="profileDir"/>: its own when settings.ini sets LocalSettings=true, My Games when it sets false; a profile with no such flag (not one MO2 wrote) uses its own Skyrim.ini when it has one.</summary>
     public static GameIni For(string profileDir)
     {
-        var local = profileDir.Length > 0 && (ReadFile(Path.Combine(profileDir, "settings.ini"), "General", "LocalSettings") is { } flag
+        var local = profileDir.Length > 0 && (ReadFile(LooseListings.OnDisk(profileDir, "settings.ini"), "General", "LocalSettings") is { } flag
             ? flag.Equals("true", StringComparison.OrdinalIgnoreCase)
-            : File.Exists(Path.Combine(profileDir, "Skyrim.ini")));
+            : File.Exists(LooseListings.OnDisk(profileDir, "Skyrim.ini")));
         return local ? new GameIni(profileDir, true) : new GameIni(MyGamesFolder(), false);
     }
 
-    /// <summary>Documents\My Games\Skyrim Special Edition, where the game keeps its INIs when MO2 does not redirect them; HOUSECARL_MY_GAMES overrides it so tests never read the machine's own.</summary>
-    static string MyGamesFolder()
-        => Environment.GetEnvironmentVariable("HOUSECARL_MY_GAMES") is { Length: > 0 } over ? over
-         : Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), "My Games", "Skyrim Special Edition");
+    /// <summary>Documents\My Games\Skyrim Special Edition (<see cref="GamePrefix.MyGames"/>), where the game keeps its INIs when the manager does not redirect them.</summary>
+    static string MyGamesFolder() => GamePrefix.MyGames();
 
     /// <summary>The value of <paramref name="key"/> in <paramref name="section"/> and the INI it came from: SkyrimCustom.ini's when it sets one, else Skyrim.ini's; null when neither does.</summary>
     public (string? Value, string Ini) Value(string section, string key)
     {
         foreach (var name in new[] { "SkyrimCustom.ini", "Skyrim.ini" })
         {
-            var ini = Path.Combine(Folder, name);
+            var ini = LooseListings.OnDisk(Folder, name);
             if (ReadFile(ini, section, key) is { } value) return (value, ini);
         }
-        return (null, Path.Combine(Folder, "Skyrim.ini"));
+        return (null, LooseListings.OnDisk(Folder, "Skyrim.ini"));
     }
 
     /// <summary>The first non-empty value of <paramref name="key"/> under <paramref name="section"/> in one INI file, or null.</summary>
