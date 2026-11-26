@@ -98,6 +98,8 @@ Read what your task needs, not everything.
    `[Section]` headers**; every line sits at the top level, and a comment is a line whose first
    character is `;` or `#` (a `;` after a value is part of the value). (Backslashed
    paths here are the game's own literals; every path into this skill's own files is forward-slashed.)
+   Under Amethyst Mod Manager (Linux), a file written to the profile's overwrite folder is picked up on
+   Amethyst's next refresh or deploy; there is no mod to enable.
 
 8. **Confirm, then stop.** Check that the type matches the record kind, the pipe positions are right,
    the trait tokens are legal for that type, and the filename contains `_KID`. **The stop condition

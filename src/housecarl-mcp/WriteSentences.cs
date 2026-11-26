@@ -103,8 +103,10 @@ internal static class WriteSentences
     };
 
     /// <summary>Under Amethyst the output folder is the profile's overwrite, which Amethyst indexes itself; no enabling step exists there.</summary>
+    internal static bool IsAmethystOutput(string modFolder) => modFolder.Equals("overwrite", StringComparison.OrdinalIgnoreCase);
+
     internal static string EnableIn(string modFolder, string mo2Sentence) =>
-        modFolder.Equals("overwrite", StringComparison.OrdinalIgnoreCase)
+        IsAmethystOutput(modFolder)
             ? "Amethyst registers a new plugin from its overwrite folder on the next refresh or deploy; check it at the end of the load order"
             : mo2Sentence;
 

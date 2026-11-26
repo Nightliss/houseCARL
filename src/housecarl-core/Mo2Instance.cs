@@ -112,7 +112,8 @@ public static class Mo2Instance
         var ini = IniPath(instanceDir);
         if (!File.Exists(ini))
         {
-            problems?.Add($"no {IniFileName} here — point at the MO2 instance folder (for a Wabbajack/portable list, the list's install folder), or at an Amethyst profile folder");
+            problems?.Add($"no {IniFileName} here — point at the MO2 instance folder (for a Wabbajack/portable list, the list's install folder)");
+            problems?.Add("for Amethyst Mod Manager, point at a profile folder (one holding modlist.txt and profile_state.json) instead");
             return null;
         }
 

@@ -289,7 +289,7 @@ internal sealed partial class RecordWrites
         var targetPath = InPlaceTarget(view, target, out var targetName, out var moved);
         if (targetPath is null)
             return WritePatchBuilder.PatchOutcome.Fail(
-                $"in-place target '{target}' is not an active plugin in the load order — name a plugin enabled in MO2, by its " +
+                $"in-place target '{target}' is not an active plugin in the load order — name a plugin enabled in {(roots.OverwriteOutput ? "the Amethyst profile" : "MO2")}, by its " +
                 "plugin filename (e.g. 'CoolWeapons.esp'). in-place edits the file the game actually loads. Nothing was written.")
                 with { Stamp = view.Stamp };
         if (moved is not null) return WritePatchBuilder.PatchOutcome.Fail(moved) with { Stamp = view.Stamp };
@@ -531,7 +531,7 @@ internal sealed partial class RecordWrites
         var targetPath = InPlaceTarget(view, target, out var targetName, out var moved);
         if (targetPath is null)
             return WritePatchBuilder.RemovalOutcome.Fail(
-                $"in-place target '{target}' is not an active plugin in the load order — name a plugin enabled in MO2, by its " +
+                $"in-place target '{target}' is not an active plugin in the load order — name a plugin enabled in {(roots.OverwriteOutput ? "the Amethyst profile" : "MO2")}, by its " +
                 "plugin filename (e.g. 'CoolWeapons.esp'). in-place removes from the file the game actually loads. Nothing was written.")
                 with { Stamp = view.Stamp };   // decided off the capture above — stamped like every post-capture outcome
         if (moved is not null) return WritePatchBuilder.RemovalOutcome.Fail(moved) with { Stamp = view.Stamp };
@@ -653,7 +653,7 @@ internal sealed partial class RecordWrites
         var targetPath = InPlaceTarget(view, target, out var targetName, out var moved);
         if (targetPath is null)
             return WritePatchBuilder.ForwardOutcome.Fail(
-                $"in-place target '{target}' is not an active plugin in the load order — name a plugin enabled in MO2, by its " +
+                $"in-place target '{target}' is not an active plugin in the load order — name a plugin enabled in {(roots.OverwriteOutput ? "the Amethyst profile" : "MO2")}, by its " +
                 "plugin filename (e.g. 'CoolWeapons.esp'). in-place forwards into the file the game actually loads. Nothing was written.")
                 with { Stamp = view.Stamp };   // decided off the capture above — stamped like every post-capture outcome
         if (moved is not null) return WritePatchBuilder.ForwardOutcome.Fail(moved) with { Stamp = view.Stamp };

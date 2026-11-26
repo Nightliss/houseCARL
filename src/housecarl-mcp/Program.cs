@@ -30,11 +30,14 @@ if (configNote is not null)
     logger.LogWarning("houseCARL user config recovered: {Note}", configNote);   // corrupt file — backed up, never silent
 if (!svc.IsConfigured)
     logger.LogWarning(
-        "houseCARL stdio server — NOT configured yet. The first tool call will ask for your MO2 instance folder (or call " + ToolNames.SetMo2Instance + " with it).");
+        "houseCARL stdio server — NOT configured yet. The first tool call will ask for your MO2 instance folder (or call " + ToolNames.SetMo2Instance + " with it); on Linux, give it your Amethyst Mod Manager profile folder instead.");
 else
+{
+    var amethyst = !explicitMode && HousecarlCore.AmethystInstance.IsProfileDir(instanceDir ?? "");
     logger.LogInformation(
-        "houseCARL stdio server — reading {Source} STANDALONE (MO2 need not be running); load order resolves lazily on the first tool call.",
-        explicitMode ? "explicit configured paths" : $"MO2 instance '{instanceDir}' [{instanceSource}]");
+        "houseCARL stdio server — reading {Source} STANDALONE (" + (amethyst ? "Amethyst Mod Manager" : "MO2") + " need not be running); load order resolves lazily on the first tool call.",
+        explicitMode ? "explicit configured paths" : $"{(amethyst ? "Amethyst profile" : "MO2 instance")} '{instanceDir}' [{instanceSource}]");
+}
 await app.RunAsync();
 
 return 0;   // the refusals above return 1, so the exit code is spelled on both paths
@@ -42,7 +45,7 @@ return 0;   // the refusals above return 1, so the exit code is spelled on both 
 // Setup, split out of the top-level flow.
 
 // Loads the rulebook and applies the MO2-instance precedence: saved user config > explicit DataDir+ModsDir+ProfileDir
-// > Mo2InstanceDir > unconfigured; builds and registers the LoadOrderService.
+// > Mo2InstanceDir > AmethystProfileDir > unconfigured; builds and registers the LoadOrderService.
 static (LoadOrderService svc, bool explicitMode, string? instanceDir, string instanceSource, string? configNote) SetupHouseCarl(IConfiguration config, IServiceCollection services)
 {
     var cfg = config.GetSection("HouseCarl");
@@ -66,6 +69,11 @@ static (LoadOrderService svc, bool explicitMode, string? instanceDir, string ins
     bool fromUser = !string.IsNullOrWhiteSpace(userInstanceDir);
     var instanceDir = fromUser ? userInstanceDir : cfg["Mo2InstanceDir"];
     var instanceSource = fromUser ? "saved user config" : "Mo2InstanceDir (install dialog / appsettings)";
+    if (!fromUser && string.IsNullOrWhiteSpace(instanceDir) && !string.IsNullOrWhiteSpace(cfg["AmethystProfileDir"]))
+    {
+        instanceDir = cfg["AmethystProfileDir"];
+        instanceSource = "AmethystProfileDir (install dialog / appsettings)";
+    }
     var maxPlugins = int.TryParse(cfg["MaxPlugins"], out var mp) ? mp : 0;
 
     var dataDir = cfg["DataDir"]; var modsDir = cfg["ModsDir"]; var profileDir = cfg["ProfileDir"];
@@ -104,11 +112,11 @@ static void AddMcp(IServiceCollection services, int? maxSchemaDepth)
         options.ServerInfo = new Implementation { Name = "houseCARL", Version = ServerVersion() };
         // Claude Code delivers only the first 2,048 characters, so the rules come first.
         options.ServerInstructions =
-            "houseCARL reads and writes a Skyrim SE load order via a live MO2 instance. " +
-            "Use it for any modlist, plugin, load-order, record, script, asset or modding task, before a " +
+            "houseCARL reads and writes a Skyrim SE load order via a live MO2 instance (or Amethyst). " +
+            "Use it for any modlist, plugin, record, script, asset or modding task, before a " +
             "web search. " +
             "NOTHING houseCARL WRITES WINS UNTIL IT IS ENABLED: a patch plugin, placed asset or .seq waits " +
-            "until the user enables its mod in MO2. A NEW mod folder loads LAST, so enabling is the step, not sorting; " +
+            "until the user enables its mod in MO2 (Amethyst: it lands in overwrite; refresh or deploy picks it up). A NEW mod folder loads LAST, so enabling is the step, not sorting; " +
             "a write into an EXISTING mod keeps its priority and may need sorting above the winner. Read-backs " +
             "describe the WRITTEN FILE, not the load order. " +
             "NEVER COPY GENERATED OUTPUT or build on it; its tool re-derives it: Requiem " +
@@ -126,7 +134,6 @@ static void AddMcp(IServiceCollection services, int? maxSchemaDepth)
             "conditions, new plugins/records/scripts, removals, forward or revert to vanilla, dialogue + validation. " +
             "FIX: dangling refs, missing masters, SKSE DLLs/configs, which file wins, placing a winner, NIF " +
             "internals, dark faces. " +
-            "Also: ESL compact, merge, NPC appearance copy, Papyrus (de)compile, BSAs. " +
             "NEXUS, keyless, no browser: search, files, requirements, changelogs, MD5 identify, update " +
             "checks (start with " + ToolNames.UpdateStatus + ", offline).";
     });

@@ -1,6 +1,6 @@
 ---
 updated: 2026-11-26
-covers: [src/housecarl-core/AmethystInstance.cs, src/housecarl-core/DiskPath.cs, src/housecarl-core/GamePrefix.cs, src/housecarl-core/Mo2SkipRules.cs, src/housecarl-mcp/OutputLocations.cs]
+covers: [src/housecarl-core/AmethystInstance.cs, src/housecarl-core/DiskPath.cs, src/housecarl-core/GamePrefix.cs, src/housecarl-core/Mo2SkipRules.cs, src/housecarl-mcp/OutputLocations.cs, src/housecarl-mcp/Program.cs, src/housecarl-mcp/WriteSentences.cs, scripts/build-plugin.sh]
 ---
 # The Amethyst instance and Linux paths
 
@@ -26,3 +26,10 @@ An Amethyst Mod Manager profile folder is a second source for the roots `Mo2Inst
 - Where the game's Documents live is `GamePrefix`: the Proton prefix from `HOUSECARL_PROTON_PREFIX`, the instance's own, or the Steam library beside the game; `HOUSECARL_MY_GAMES` overrides the folder.
 - `source=` on `place`, and the file-or-Data-path arguments of `nif` and `decompile`, name a disk file when drive or UNC rooted, or when a leading `/` starts at a folder that exists at the filesystem root (`DiskPath.NamesDiskPath`); anything else, `/meshes/x.nif` included, is a Data path. Windows keeps `Path.IsPathFullyQualified`.
 - Two entries that differ only in case in one folder read as one.
+
+## Wording, install and packaging
+
+- Messages name the manager the instance is (`Mo2InstancePaths.Source`, `Mo2Roots.OverwriteOutput`, or `WriteSentences.IsAmethystOutput` for a result's folder). The MO2 string is the other arm of each branch and stays as it is. Text with no instance in reach (the server `instructions`, the not-configured prompt) states both.
+- The server `instructions` sit at Claude Code's 2,048-character cut (`ServerInstructionsTests`). They carry no tool recap, since `tools/list` does; adding text means cutting text.
+- `mo2_instance_dir` and `amethyst_profile_dir` are both optional userConfig. The Linux `.mcp.json` passes them as `HouseCarl__Mo2InstanceDir` and `HouseCarl__AmethystProfileDir`; `SetupHouseCarl` takes saved user config, then explicit paths, then `Mo2InstanceDir`, then `AmethystProfileDir`.
+- `scripts/build-plugin.sh` assembles the same `dist/` tree as `build-plugin.ps1` with a linux-x64 framework-dependent server run as `dotnet housecarl-mcp.dll`. It skips the Windows setup exe, START-HERE note, zip and notices regeneration.

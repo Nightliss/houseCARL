@@ -106,6 +106,8 @@ Read `references/placement-and-conflicts.md` before naming the file — the exac
 the per-type toggles (a missing toggle is **off**, Light excepted), the global `SkyPatcher.ini`
 switches and the read-order conflict rule.
 
+Under Amethyst Mod Manager (Linux), a file written to the profile's overwrite folder is picked up on Amethyst's next refresh or deploy; there is no mod to enable.
+
 The job needs three things from the user: which records to hit, what the field change is, and
 whether the INI may be installed into the live setup or only written to a working folder.
 

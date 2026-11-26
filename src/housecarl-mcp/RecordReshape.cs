@@ -31,7 +31,7 @@ internal sealed partial class RecordWrites
             foreach (var ext in OutputLocations.PluginExts)              // .esp / .esm / .esl
                 if (view.ContainsPlugin(stem + ext))
                     return WritePatchBuilder.CreatePluginOutcome.Fail(
-                        $"a plugin named '{stem + ext}' is already active in your load order — a header-only trigger needs a UNIQUE basename (a second one would shadow it, MO2 picking the winner by mod order). Choose a different name.");
+                        $"a plugin named '{stem + ext}' is already active in your load order — a header-only trigger needs a UNIQUE basename (a second one would shadow it, {(roots.OverwriteOutput ? "Amethyst picking the winner by mod order" : "MO2 picking the winner by mod order")}). Choose a different name.");
             var folder = OutputLocations.PatchFolderFor(roots, stem);
             var plugin = stem + ".esp";
             var active = OutputLocations.ActivePluginBasenames(roots, snapshot.BuiltPluginNames);   // before the lock: may build the order
@@ -109,10 +109,11 @@ internal sealed partial class RecordWrites
                     return WritePatchBuilder.CompactOutcome.Fail(
                         $"'{name}' is not in the active load order and {loc.Ambiguous.Count} mod folders provide a file with that name " +
                         $"({string.Join(", ", loc.Ambiguous.Select(h => h.Where))}) — ambiguous, refusing to guess which to compact. " +
-                        "Enable the one you mean in MO2, or remove the duplicates.");
+                        (roots.OverwriteOutput ? "Enable the one you mean in Amethyst, or remove the duplicates." : "Enable the one you mean in MO2, or remove the duplicates."));
                 srcPath = loc.Path!;
                 offOrderNote = $"'{name}' is not in the active load order (found: {loc.Where}) — compacted OFF-ORDER; " +
-                               "masters resolved from the active order. Enable the result in MO2 to use it.";
+                               "masters resolved from the active order. " +
+                               (roots.OverwriteOutput ? "Amethyst registers the result from its overwrite folder on the next refresh or deploy." : "Enable the result in MO2 to use it.");
             }
 
             ModKey modKey;
@@ -510,7 +511,7 @@ internal sealed partial class RecordWrites
             if (view.ContainsPlugin(outName))
                 return WritePatchBuilder.MergeOutcome.Fail(
                     $"'{outName}' — the plugin patch='{patchName}' names — is already an active plugin in your load order, and the merge " +
-                    "output must be a NEW plugin name (merging over an existing plugin would shadow it in MO2). Pass patch= another name.");
+                    $"output must be a NEW plugin name (merging over an existing plugin would shadow it in {(roots.OverwriteOutput ? "Amethyst" : "MO2")}). Pass patch= another name.");
 
             // ---- validate and load-order-sort the donors: merge semantics are load-order semantics, so sort rather
             //      than trusting argument order. One name-to-position index serves this sort and the master sort. ----
@@ -527,7 +528,7 @@ internal sealed partial class RecordWrites
                         $"donor '{d}' is not an active plugin in your load order." +
                         dClause +
                         " Merge reads each donor's records and conflict position from the ACTIVE order." +
-                        (dWhy is not null ? "" : " Activate it in MO2 first (pass the exact plugin filename, e.g. 'CoolMod.esp')."));
+                        (dWhy is not null ? "" : $" Activate it in {(roots.OverwriteOutput ? "Amethyst" : "MO2")} first (pass the exact plugin filename, e.g. 'CoolMod.esp')."));
                 }
                 if (view.ExcludedPlugins.TryGetValue(d, out var excluded))
                     return WritePatchBuilder.MergeOutcome.Fail(
@@ -609,7 +610,7 @@ internal sealed partial class RecordWrites
                 outPath = ResolveOutputPath(snapshot, patchName, into: null, out _, out createdFolder,
                     refuseTaken: new OutputLocations.StemRefusal(
                         "the merged plugin",
-                        "Remove it in MO2, or pass patch= a name no mod folder or active plugin already carries."));
+                        (roots.OverwriteOutput ? "Remove it, or pass patch= a name no plugin in the overwrite folder or active plugin already carries." : "Remove it in MO2, or pass patch= a name no mod folder or active plugin already carries.")));
             }
             catch (InvalidOperationException ex) { return WritePatchBuilder.MergeOutcome.Fail(ex.Message); }
             outName = Path.GetFileName(outPath);

@@ -14,8 +14,14 @@
     "mo2_instance_dir": {
       "type": "directory",
       "title": "MO2 instance folder",
-      "description": "The folder containing ModOrganizer.ini for your modlist (houseCARL derives everything from this).",
-      "required": true
+      "description": "The folder containing ModOrganizer.ini for your modlist (houseCARL derives everything from this). Leave empty if you use Amethyst Mod Manager on Linux.",
+      "required": false
+    },
+    "amethyst_profile_dir": {
+      "type": "directory",
+      "title": "Amethyst profile folder (Linux)",
+      "description": "Amethyst Mod Manager users on Linux: the profile folder (profiles/<name>, holding modlist.txt and profile_state.json). Leave empty if you use MO2.",
+      "required": false
     }
   }
 }

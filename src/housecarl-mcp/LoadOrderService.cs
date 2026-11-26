@@ -1362,7 +1362,9 @@ public sealed partial class LoadOrderService : IDisposable, IAssetHost, ICheckHo
         "houseCARL has no Mod Organizer 2 instance configured yet. Ask the user which MO2 instance folder to use — the " +
         "folder that contains ModOrganizer.ini (for a Wabbajack / portable list, that's the list's install folder). You " +
         "may help locate it, but do NOT silently pick one when more than one MO2 install exists: list the candidates you " +
-        "found and let the user choose. State which folder you're using, then call " + ToolNames.SetMo2Instance + " with that path.";
+        "found and let the user choose. State which folder you're using, then call " + ToolNames.SetMo2Instance + " with that path. " +
+        "Under Amethyst Mod Manager (Linux) there is no ModOrganizer.ini: pass the Amethyst profile folder (profiles/<name>, " +
+        "holding modlist.txt and profile_state.json) as the path, or the profile root with profile=.";
 
     /// <summary>Tools call this FIRST: the unconfigured prompt, which the tool returns as its refusal, else null — the MCP framework rewrites a thrown exception to a generic message.</summary>
     public string? ConfigPromptOrNull() { lock (_gate) { return _configured ? null : NotConfiguredText; } }

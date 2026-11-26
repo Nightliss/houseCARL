@@ -95,6 +95,8 @@ Read grammar-core plus the one or two files you need — don't bulk-load everyth
    key before line order (`references/grammar-core.md` §2-§3); comment on a line of its own with `;`.
    Ship it inside a mod the mod manager handles, then confirm the placement (*Check the reach before
    you write it*, below).
+   Under Amethyst Mod Manager (Linux), a file written to the profile's overwrite folder is picked up on
+   Amethyst's next refresh or deploy; there is no mod to enable.
 
 ## Two worked lines
 

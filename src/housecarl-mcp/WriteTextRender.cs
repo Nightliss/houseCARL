@@ -285,8 +285,12 @@ static partial class WriteTools
                 : InPlaceAgainHint("to remove more records from this plugin in place", file));
         else
             sb.Append(o.RemainingRecords == 0
-                ? "this patch now carries no records — it's inert; disable or delete the mod folder in MO2 if you don't need it."
-                : "re-sort in MO2 if dropping this override changes a conflict winner.");
+                ? (WriteSentences.IsAmethystOutput(modFolder)
+                    ? "this patch now carries no records — it's inert; delete the plugin from the overwrite folder if you don't need it."
+                    : "this patch now carries no records — it's inert; disable or delete the mod folder in MO2 if you don't need it.")
+                : (WriteSentences.IsAmethystOutput(modFolder)
+                    ? "re-sort in Amethyst if dropping this override changes a conflict winner."
+                    : "re-sort in MO2 if dropping this override changes a conflict winner."));
         sb.Append(Epoch(o));
         return sb.ToString();
     }
@@ -409,8 +413,9 @@ static partial class WriteTools
               .Append(WriteSentences.RoundTripChecked);
         else
             sb.Append("wrote compacted ").Append(file).Append(" (new plugin; ").Append(o.Bytes).Append(" bytes)\n")
-              .Append("mod folder: ").Append(modFolder).Append("  — enable it and DISABLE the original '").Append(file)
-              .Append("' mod in MO2 (same basename — MO2 serves one). Review in xEdit first.\n");
+              .Append("mod folder: ").Append(modFolder).Append(WriteSentences.IsAmethystOutput(modFolder)
+                  ? "  — it is in the Amethyst overwrite folder, which Amethyst registers on its next refresh or deploy; DISABLE the original '" + file + "' mod in Amethyst (same basename — only one is served). Review in xEdit first.\n"
+                  : "  — enable it and DISABLE the original '" + file + "' mod in MO2 (same basename — MO2 serves one). Review in xEdit first.\n");
 
         int overrides = o.RecordsCopied - o.RecordsRenumbered;
         bool movedNothing = o.RecordsMoved == 0 && o.RecordsRenumbered > 0;
@@ -622,7 +627,7 @@ static partial class WriteTools
         else
             sb.Append("wrote merged ").Append(file).Append(" (new plugin; ").Append(o.Bytes).Append(" bytes) from ")
               .Append(o.Donors.Count).Append(" donors: ").Append(string.Join(", ", o.Donors)).Append('\n');
-        sb.Append("mod folder: ").Append(modFolder).Append(modFolder.Equals("overwrite", StringComparison.OrdinalIgnoreCase)
+        sb.Append("mod folder: ").Append(modFolder).Append(WriteSentences.IsAmethystOutput(modFolder)
             ? "  — review in xEdit; it is in the Amethyst overwrite folder, which Amethyst registers on its next refresh or deploy.\n"
             : "  — review in xEdit, then enable it in MO2 (MO2 adds a newly activated plugin at the END of the load order).\n");
         AppendPlacement(sb, o);
