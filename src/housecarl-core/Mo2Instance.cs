@@ -23,11 +23,12 @@ public static class Mo2Instance
 {
     public const string IniFileName = "ModOrganizer.ini";
 
-    /// <summary>The folder to resolve for what the caller pointed at: an MO2 instance as given, else an Amethyst profile folder, found from the profile folder itself or from a profile root and a profile name (the one Amethyst last had active when none is named); throws naming why when it is meant as Amethyst and is not usable.</summary>
+    /// <summary>The folder to resolve for what the caller pointed at: an MO2 instance as given, else an Amethyst staging root (followed to the profile Amethyst has active) or profile folder, found from the profile folder itself or from a profile root and a profile name (the one Amethyst last had active when none is named); throws naming why when it is meant as Amethyst and is not usable.</summary>
     public static string Locate(string path, string? profile)
     {
         var folder = (path ?? "").Trim().TrimEnd('\\', '/');
-        if (folder.Length == 0 || File.Exists(IniPath(folder))) return path ?? "";
+        if (folder.Length == 0 || File.Exists(Path.Combine(folder, IniFileName))) return path ?? "";
+        if (string.IsNullOrWhiteSpace(profile) && AmethystInstance.ActiveProfileDir(folder) is not null) return folder;
         if (AmethystInstance.Locate(folder, profile, out var problem) is { } profileDir) return profileDir;
         if (AmethystInstance.IsProfileDir(folder) || Directory.Exists(LooseListings.OnDisk(folder, "profiles")) || !string.IsNullOrWhiteSpace(profile))
             throw new InvalidOperationException($"'{folder}' is not a usable Amethyst profile — {problem}.");
@@ -35,8 +36,13 @@ public static class Mo2Instance
     }
 
     /// <summary>The ModOrganizer.ini path for an instance folder (the file the freshness check stats for a profile switch).</summary>
-    public static string IniPath(string instanceDir) =>
-        AmethystInstance.IsProfileDir(instanceDir) ? LooseListings.OnDisk(instanceDir, AmethystInstance.StateFileName) : Path.Combine(instanceDir, IniFileName);
+    public static string IniPath(string instanceDir)
+    {
+        var ini = Path.Combine(instanceDir, IniFileName);
+        if (File.Exists(ini)) return ini;
+        if (AmethystInstance.IsProfileDir(instanceDir)) return LooseListings.OnDisk(instanceDir, AmethystInstance.StateFileName);
+        return AmethystInstance.DeployStatePath(instanceDir) ?? ini;
+    }
 
     /// <summary>Derive the load-order roots from an instance folder, or THROW naming what is missing; use <see cref="Validate"/> for the problems without an exception.</summary>
     public static Mo2InstancePaths Resolve(string instanceDir)
@@ -68,6 +74,7 @@ public static class Mo2Instance
     public static string? ReadSelectedProfile(string instanceDir)
     {
         if (AmethystInstance.IsProfileDir(instanceDir)) return Path.GetFileName(instanceDir.TrimEnd('\\', '/'));
+        if (!File.Exists(Path.Combine(instanceDir, IniFileName)) && AmethystInstance.ActiveProfileDir(instanceDir) is { } active) return Path.GetFileName(active);
         var ini = IniPath(instanceDir);
         if (!File.Exists(ini)) return null;
         string[] lines;
@@ -82,6 +89,7 @@ public static class Mo2Instance
     public static (Mo2SkipRules Rules, IReadOnlyList<string> Warnings) ReadSkipRules(string instanceDir)
     {
         if (AmethystInstance.IsProfileDir(instanceDir)) return (AmethystInstance.ReadSkipRules(instanceDir), Array.Empty<string>());
+        if (!File.Exists(Path.Combine(instanceDir, IniFileName)) && AmethystInstance.ActiveProfileDir(instanceDir) is { } active) return (AmethystInstance.ReadSkipRules(active), Array.Empty<string>());
         string[] lines;
         try { lines = File.ReadAllLines(IniPath(instanceDir)); }
         catch { return (Mo2SkipRules.Default, Array.Empty<string>()); }
@@ -109,7 +117,9 @@ public static class Mo2Instance
         if (!Directory.Exists(instanceDir)) { problems?.Add($"the folder does not exist: '{instanceDir}'"); return null; }
         if (AmethystInstance.IsProfileDir(instanceDir)) return AmethystInstance.Derive(instanceDir, problems);
 
-        var ini = IniPath(instanceDir);
+        var ini = Path.Combine(instanceDir, IniFileName);
+        if (!File.Exists(ini) && AmethystInstance.ActiveProfileDir(instanceDir) is { } active)
+            return AmethystInstance.Derive(active, problems) is { } followed ? followed with { InstanceDir = instanceDir } : null;
         if (!File.Exists(ini))
         {
             problems?.Add($"no {IniFileName} here — point at the MO2 instance folder (for a Wabbajack/portable list, the list's install folder)");

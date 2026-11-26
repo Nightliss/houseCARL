@@ -39,6 +39,12 @@ public static class AmethystInstance
         return LooseListings.OnDisk(profiles, folder);
     }
 
+    /// <summary>The profile folder Amethyst last had active under staging root <paramref name="root"/>, or null when <paramref name="root"/> is a profile itself or names no usable active profile.</summary>
+    public static string? ActiveProfileDir(string root) => IsProfileDir(root.Trim().TrimEnd('\\', '/')) ? null : Locate(root, null, out _);
+
+    /// <summary>The <c>deploy_state.json</c> that records which profile is active for staging root <paramref name="root"/>, or null when no game config names it.</summary>
+    public static string? DeployStatePath(string root) => GameConfigDir(root.Trim().TrimEnd('\\', '/')) is { } dir ? LooseListings.OnDisk(dir, "deploy_state.json") : null;
+
     /// <summary>The profile Amethyst last had active for the game whose staging root is <paramref name="profileRoot"/>, or null.</summary>
     static string? ActiveProfile(string profileRoot)
     {

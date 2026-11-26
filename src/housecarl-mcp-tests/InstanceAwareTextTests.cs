@@ -31,7 +31,7 @@ public sealed class InstanceAwareTextTests
     {
         var text = SetupTools.Render(Paths("Amethyst"), true, null, null);
 
-        Assert.Contains("configured houseCARL -> Amethyst profile '/i'", text);
+        Assert.Contains("configured houseCARL -> Amethyst folder '/i'", text);
         Assert.Contains("read as empty until Amethyst creates it", text);
         Assert.DoesNotContain("MO2", text);
     }
@@ -109,20 +109,20 @@ public sealed class PluginManifestUserConfigTests
     }
 
     [Fact]
-    public void AnOptionalAmethystProfileFolderOptionExists()
+    public void AnOptionalAmethystFolderOptionExists()
     {
-        var a = UserConfig().GetProperty("amethyst_profile_dir");
+        var a = UserConfig().GetProperty("amethyst_instance_dir");
 
         Assert.Equal("directory", a.GetProperty("type").GetString());
         Assert.False(a.GetProperty("required").GetBoolean());
     }
 
     [Fact]
-    public void TheServerReadsTheAmethystProfileFolderFromTheSameConfigSectionAsTheMo2One()
+    public void TheServerReadsTheAmethystFolderFromTheSameConfigSectionAsTheMo2One()
     {
         var program = File.ReadAllText(Path.Combine(HarnessPaths.RepoRoot, "src", "housecarl-mcp", "Program.cs"));
 
         Assert.Contains("cfg[\"Mo2InstanceDir\"]", program);
-        Assert.Contains("cfg[\"AmethystProfileDir\"]", program);
+        Assert.Contains("cfg[\"AmethystInstanceDir\"]", program);
     }
 }

@@ -17,10 +17,10 @@
       "description": "The folder containing ModOrganizer.ini for your modlist (houseCARL derives everything from this). Leave empty if you use Amethyst Mod Manager on Linux.",
       "required": false
     },
-    "amethyst_profile_dir": {
+    "amethyst_instance_dir": {
       "type": "directory",
-      "title": "Amethyst profile folder (Linux)",
-      "description": "Amethyst Mod Manager users on Linux: the profile folder (profiles/<name>, holding modlist.txt and profile_state.json). Leave empty if you use MO2.",
+      "title": "Amethyst folder (Linux)",
+      "description": "Amethyst Mod Manager users on Linux: the game's Amethyst folder holding profiles/ (e.g. .../Skyrim Special Edition). houseCARL follows the profile Amethyst has active, like MO2's selected profile. Leave empty if you use MO2.",
       "required": false
     }
   }

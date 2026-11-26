@@ -128,7 +128,47 @@ public sealed class AmethystInstanceTests : IDisposable
         Directory.CreateDirectory(games);
         File.WriteAllText(Path.Combine(games, "paths.json"), "{\"staging_path\": \"" + _stage + "\"}");
         File.WriteAllText(Path.Combine(games, "deploy_state.json"), "{\"last_active_profile\": \"One\"}");
-        Assert.Equal(Path.Combine(_stage, "profiles", "One"), Mo2Instance.Locate(_stage, null));
+        Assert.Equal(_stage, Mo2Instance.Locate(_stage, null));
+        Assert.Equal("One", Mo2Instance.ReadSelectedProfile(_stage));
+        Assert.Equal(Path.Combine(_stage, "profiles", "Two"), Mo2Instance.Locate(_stage, "Two"));
+    }
+
+    [Fact]
+    public void AStagingRootFollowsTheProfileAmethystHasActiveBetweenCalls()
+    {
+        Profile("Alpha", ["+ModA"], [], gamePath: _game);
+        Profile("Beta", ["+ModB"], [], gamePath: _game);
+        var mods = Path.Combine(_stage, "mods");
+        Put(Path.Combine(mods, "ModA"), Rel);
+        Put(Path.Combine(mods, "ModB"), Rel);
+        var games = Path.Combine(_config, "games", "Skyrim Special Edition");
+        Directory.CreateDirectory(games);
+        File.WriteAllText(Path.Combine(games, "paths.json"), "{\"staging_path\": \"" + _stage + "\"}");
+        var state = Path.Combine(games, "deploy_state.json");
+        File.WriteAllText(state, "{\"last_active_profile\": \"Alpha\"}");
+        var svc = Open(_stage);
+
+        Assert.Equal("ModA", svc.AssetStatus([Rel]).Results[0].Hit!.Winner!.Source);
+
+        File.WriteAllText(state, "{\"last_active_profile\":   \"Beta\", \"x\": 1}");
+
+        Assert.Equal("ModB", svc.AssetStatus([Rel]).Results[0].Hit!.Winner!.Source);
+    }
+
+    [Fact]
+    public void SetInstanceOnAStagingRootWithNoProfileKeepsTheRootAndFollowsTheActiveProfile()
+    {
+        Profile("Act", ["+A"], [], gamePath: _game);
+        var games = Path.Combine(_config, "games", "Skyrim Special Edition");
+        Directory.CreateDirectory(games);
+        File.WriteAllText(Path.Combine(games, "paths.json"), "{\"staging_path\": \"" + _stage + "\"}");
+        File.WriteAllText(Path.Combine(games, "deploy_state.json"), "{\"last_active_profile\": \"Act\"}");
+
+        var (paths, _, _, _) = Open(_stage).SetInstance(_stage);
+
+        Assert.Equal(_stage, paths.InstanceDir);
+        Assert.Equal("Act", paths.ProfileName);
+        Assert.Equal("Amethyst", paths.Source);
     }
 
     [Fact]

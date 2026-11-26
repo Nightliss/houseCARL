@@ -17,7 +17,7 @@ public static class SetupTools
          "it for later sessions (a failed save is reported), and returns the detected profile with an enabled-mods and " +
          "active-plugins summary. On Linux it also takes an Amethyst Mod Manager profile: pass the profile folder " +
          "(profiles/<name>, holding modlist.txt and profile_state.json), or the profile root with profile= (the profile " +
-         "Amethyst last had active when profile= is left out); a folder that is neither an MO2 instance nor an Amethyst " +
+         "Amethyst has active, followed when it changes, when profile= is left out); a folder that is neither an MO2 instance nor an Amethyst " +
          "profile changes nothing.")]
     public static string SetMo2Instance(
         LoadOrderService svc,
@@ -79,8 +79,10 @@ public static class SetupTools
         var sb = new StringBuilder();
         bool mo2 = p.Source == "MO2";
         if (mo2) sb.Append("configured houseCARL -> MO2 instance '").Append(p.InstanceDir).Append("'\n");
+        else if (p.InstanceDir != p.ProfileDir) sb.Append("configured houseCARL -> ").Append(p.Source).Append(" folder '").Append(p.InstanceDir).Append("'\n");
         else sb.Append("configured houseCARL -> ").Append(p.Source).Append(" profile '").Append(p.InstanceDir).Append("'\n");
         if (mo2) sb.Append("active profile: ").Append(p.ProfileName).Append("  (auto-detected from ModOrganizer.ini)\n");
+        else if (p.InstanceDir != p.ProfileDir) sb.Append("active profile: ").Append(p.ProfileName).Append("  (the profile Amethyst has active; followed when it changes)\n");
         else sb.Append("active profile: ").Append(p.ProfileName).Append("  (the folder given)\n");
         sb.Append("  profile folder: ").Append(p.ProfileDir).Append('\n');
         sb.Append("  mods folder: ").Append(p.ModsDir).Append('\n');

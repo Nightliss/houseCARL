@@ -33,10 +33,10 @@ if (!svc.IsConfigured)
         "houseCARL stdio server — NOT configured yet. The first tool call will ask for your MO2 instance folder (or call " + ToolNames.SetMo2Instance + " with it); on Linux, give it your Amethyst Mod Manager profile folder instead.");
 else
 {
-    var amethyst = !explicitMode && HousecarlCore.AmethystInstance.IsProfileDir(instanceDir ?? "");
+    var amethyst = !explicitMode && (HousecarlCore.AmethystInstance.IsProfileDir(instanceDir ?? "") || HousecarlCore.AmethystInstance.ActiveProfileDir(instanceDir ?? "") is not null);
     logger.LogInformation(
         "houseCARL stdio server — reading {Source} STANDALONE (" + (amethyst ? "Amethyst Mod Manager" : "MO2") + " need not be running); load order resolves lazily on the first tool call.",
-        explicitMode ? "explicit configured paths" : $"{(amethyst ? "Amethyst profile" : "MO2 instance")} '{instanceDir}' [{instanceSource}]");
+        explicitMode ? "explicit configured paths" : $"{(amethyst ? "Amethyst folder" : "MO2 instance")} '{instanceDir}' [{instanceSource}]");
 }
 await app.RunAsync();
 
@@ -45,7 +45,7 @@ return 0;   // the refusals above return 1, so the exit code is spelled on both 
 // Setup, split out of the top-level flow.
 
 // Loads the rulebook and applies the MO2-instance precedence: saved user config > explicit DataDir+ModsDir+ProfileDir
-// > Mo2InstanceDir > AmethystProfileDir > unconfigured; builds and registers the LoadOrderService.
+// > Mo2InstanceDir > AmethystInstanceDir > unconfigured; builds and registers the LoadOrderService.
 static (LoadOrderService svc, bool explicitMode, string? instanceDir, string instanceSource, string? configNote) SetupHouseCarl(IConfiguration config, IServiceCollection services)
 {
     var cfg = config.GetSection("HouseCarl");
@@ -69,10 +69,10 @@ static (LoadOrderService svc, bool explicitMode, string? instanceDir, string ins
     bool fromUser = !string.IsNullOrWhiteSpace(userInstanceDir);
     var instanceDir = fromUser ? userInstanceDir : cfg["Mo2InstanceDir"];
     var instanceSource = fromUser ? "saved user config" : "Mo2InstanceDir (install dialog / appsettings)";
-    if (!fromUser && string.IsNullOrWhiteSpace(instanceDir) && !string.IsNullOrWhiteSpace(cfg["AmethystProfileDir"]))
+    if (!fromUser && string.IsNullOrWhiteSpace(instanceDir) && !string.IsNullOrWhiteSpace(cfg["AmethystInstanceDir"]))
     {
-        instanceDir = cfg["AmethystProfileDir"];
-        instanceSource = "AmethystProfileDir (install dialog / appsettings)";
+        instanceDir = cfg["AmethystInstanceDir"];
+        instanceSource = "AmethystInstanceDir (install dialog / appsettings)";
     }
     var maxPlugins = int.TryParse(cfg["MaxPlugins"], out var mp) ? mp : 0;
 

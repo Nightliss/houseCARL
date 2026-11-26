@@ -70,7 +70,7 @@ cat > "$DIST_ROOT/.mcp.json" <<'JSON'
       "args": ["${CLAUDE_PLUGIN_ROOT}/server/housecarl-mcp.dll"],
       "env": {
         "HouseCarl__Mo2InstanceDir": "${user_config.mo2_instance_dir}",
-        "HouseCarl__AmethystProfileDir": "${user_config.amethyst_profile_dir}",
+        "HouseCarl__AmethystInstanceDir": "${user_config.amethyst_instance_dir}",
         "HOUSECARL_DATA_DIR": "${CLAUDE_PLUGIN_DATA}"
       }
     }
